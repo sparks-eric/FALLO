@@ -1,0 +1,2362 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Finder And Logger of Lost Occurrences - Herramienta para registro de marcas de tiempo">
+    <meta name="theme-color" content="#0f0a12">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="F.A.L.L.O">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230f0a12' width='192' height='192'/><text x='50%' y='50%' font-size='120' fill='%23e0e0e0' text-anchor='middle' dy='.3em' font-family='Arial'>F</text></svg>">
+    <title>F.A.L.L.O.</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0a12 0%, #2a1f30 50%, #3d3440 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 20px;
+            color: #d4d4d4;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+        }
+
+        /* Layout horizontal/landscape */
+        @media (orientation: landscape) and (min-height: 600px) {
+            .container {
+                flex-direction: row;
+                gap: 20px;
+                align-items: stretch;
+                justify-content: flex-start;
+            }
+
+            h1 {
+                display: none;
+            }
+
+            .subtitle {
+                display: none;
+            }
+
+            .info-wrapper {
+                flex: 0 0 280px;
+                order: 1;
+                align-self: flex-start;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .info-section {
+                margin-bottom: 0;
+            }
+
+            .controls-section {
+                margin-top: 0;
+                margin-bottom: 0;
+                border-top: 1px solid #4a4a4a;
+            }
+
+            .main-content {
+                flex: 0 0 500px;
+                order: 2;
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+                margin: 0 auto;
+            }
+
+            .timer-container {
+                margin-top: 0;
+            }
+
+            .marks-section {
+                margin-bottom: 0;
+            }
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 5px;
+            font-size: 1.6rem;
+            color: #e0e0e0;
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 0.85rem;
+            color: #a0a0a0;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0.3; }
+        }
+
+        .timer-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            align-items: stretch;
+        }
+
+        .timer-display {
+            flex: 1;
+            text-align: center;
+            font-size: 4.2rem;
+            font-family: 'Consolas', 'Courier New', monospace;
+            background: #372F38;
+            padding: 32px;
+            border-radius: 4px;
+            color: #e0e0e0;
+            border: 1px solid #4a4a4a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        #recordingIndicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 12px;
+            height: 12px;
+            background: #ff0000;
+            border-radius: 50%;
+        }
+
+        .timer-display.recording {
+            color: #ff4444;
+        }
+
+        .tc-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #372F38;
+            padding: 32px 19px;
+            border-radius: 4px;
+            border: 1px solid #4a4a4a;
+            min-width: 100px;
+            gap: 10px;
+        }
+
+        .tc-display-label {
+            font-size: 0.75rem;
+            color: #808080;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .tc-display-value {
+            font-size: 2.17rem;
+            font-family: 'Consolas', 'Courier New', monospace;
+            color: #e0e0e0;
+            font-weight: 500;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            align-items: center;
+            appearance: none;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-flex;
+            font-family: "JetBrains Mono", monospace;
+            height: 40px;
+            justify-content: center;
+            line-height: 1;
+            list-style: none;
+            overflow: hidden;
+            padding: 10px 20px;
+            position: relative;
+            text-align: center;
+            text-decoration: none;
+            transition: box-shadow 0.15s, transform 0.15s;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            white-space: nowrap;
+            will-change: box-shadow, transform;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-sizing: border-box;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: rgba(0, 0, 0, 0.5) 0 4px 8px, rgba(0, 0, 0, 0.4) 0 7px 13px -3px;
+        }
+
+        .btn:active {
+            box-shadow: rgba(0, 0, 0, 0.6) 0 3px 7px inset;
+            transform: translateY(2px);
+        }
+
+        .btn:focus {
+            outline: none;
+            box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.3), rgba(0, 0, 0, 0.5) 0 2px 4px;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-start {
+            background: #7c5c9c;
+            color: #fff;
+            box-shadow: rgba(124, 92, 156, 0.4) 0 2px 4px, rgba(124, 92, 156, 0.3) 0 7px 13px -3px, rgba(100, 70, 130, 0.3) 0 -3px 0 inset;
+        }
+
+        .btn-start:hover {
+            box-shadow: rgba(124, 92, 156, 0.4) 0 4px 8px, rgba(124, 92, 156, 0.3) 0 7px 13px -3px, rgba(100, 70, 130, 0.3) 0 -3px 0 inset;
+        }
+
+        .btn-pause {
+            background: #5a5a5a;
+            color: #d4d4d4;
+            box-shadow: rgba(90, 90, 90, 0.4) 0 2px 4px, rgba(90, 90, 90, 0.3) 0 7px 13px -3px, rgba(70, 70, 70, 0.3) 0 -3px 0 inset;
+        }
+
+        .btn-pause:hover {
+            box-shadow: rgba(90, 90, 90, 0.4) 0 4px 8px, rgba(90, 90, 90, 0.3) 0 7px 13px -3px, rgba(70, 70, 70, 0.3) 0 -3px 0 inset;
+        }
+
+        .btn-stop {
+            background: #8a3a3a;
+            color: #fff;
+            box-shadow: rgba(138, 58, 58, 0.4) 0 2px 4px, rgba(138, 58, 58, 0.3) 0 7px 13px -3px, rgba(110, 30, 30, 0.3) 0 -3px 0 inset;
+        }
+
+        .btn-stop:hover {
+            box-shadow: rgba(138, 58, 58, 0.4) 0 4px 8px, rgba(138, 58, 58, 0.3) 0 7px 13px -3px, rgba(110, 30, 30, 0.3) 0 -3px 0 inset;
+        }
+
+        .btn-mark {
+            background: #8a3a3a;
+            color: #fff;
+            font-size: 0.85rem;
+            padding: 10px 18px;
+            box-shadow: rgba(138, 58, 58, 0.4) 0 2px 4px, rgba(138, 58, 58, 0.3) 0 7px 13px -3px, rgba(110, 30, 30, 0.3) 0 -3px 0 inset;
+        }
+
+        .btn-mark:hover {
+            box-shadow: rgba(138, 58, 58, 0.4) 0 4px 8px, rgba(138, 58, 58, 0.3) 0 7px 13px -3px, rgba(110, 30, 30, 0.3) 0 -3px 0 inset;
+        }
+
+        .btn-bloc {
+            background: #5a5a5a;
+            color: #d4d4d4;
+            box-shadow: rgba(90, 90, 90, 0.4) 0 2px 4px, rgba(90, 90, 90, 0.3) 0 7px 13px -3px, rgba(70, 70, 70, 0.3) 0 -3px 0 inset;
+        }
+
+        .btn-bloc:hover {
+            box-shadow: rgba(90, 90, 90, 0.4) 0 4px 8px, rgba(90, 90, 90, 0.3) 0 7px 13px -3px, rgba(70, 70, 70, 0.3) 0 -3px 0 inset;
+        }
+
+        .btn-tc-in {
+            background: #3a7a5a;
+            color: #fff;
+            box-shadow: rgba(58, 122, 90, 0.4) 0 2px 4px, rgba(58, 122, 90, 0.3) 0 7px 13px -3px, rgba(30, 60, 45, 0.3) 0 -3px 0 inset;
+        }
+
+        .btn-tc-in:hover {
+            box-shadow: rgba(58, 122, 90, 0.4) 0 4px 8px, rgba(58, 122, 90, 0.3) 0 7px 13px -3px, rgba(30, 60, 45, 0.3) 0 -3px 0 inset;
+        }
+
+        .btn-tc-out {
+            background: #7a5a3a;
+            color: #fff;
+            box-shadow: rgba(122, 90, 58, 0.4) 0 2px 4px, rgba(122, 90, 58, 0.3) 0 7px 13px -3px, rgba(100, 70, 40, 0.3) 0 -3px 0 inset;
+        }
+
+        .btn-tc-out:hover {
+            box-shadow: rgba(122, 90, 58, 0.4) 0 4px 8px, rgba(122, 90, 58, 0.3) 0 7px 13px -3px, rgba(100, 70, 40, 0.3) 0 -3px 0 inset;
+        }
+
+        .btn-export {
+            background: #4a4a4a;
+            color: #d4d4d4;
+            border: none;
+            box-shadow: rgba(74, 74, 74, 0.4) 0 2px 4px, rgba(74, 74, 74, 0.3) 0 7px 13px -3px, rgba(50, 50, 50, 0.3) 0 -3px 0 inset;
+        }
+
+        .btn-export:hover {
+            background: #5a5a5a;
+            box-shadow: rgba(74, 74, 74, 0.4) 0 4px 8px, rgba(74, 74, 74, 0.3) 0 7px 13px -3px, rgba(50, 50, 50, 0.3) 0 -3px 0 inset;
+        }
+
+        .btn-reset {
+            background: #313131;
+            color: #e6e6e6;
+            border: none;
+            box-shadow: rgba(49, 49, 49, 0.4) 0 2px 4px, rgba(49, 49, 49, 0.3) 0 7px 13px -3px, rgba(20, 20, 20, 0.3) 0 -3px 0 inset;
+        }
+
+        .btn-reset:hover {
+            background: #4a4a4a;
+            color: #d4d4d4;
+            box-shadow: rgba(49, 49, 49, 0.4) 0 4px 8px, rgba(49, 49, 49, 0.3) 0 7px 13px -3px, rgba(20, 20, 20, 0.3) 0 -3px 0 inset;
+        }
+
+        .marks-section {
+            background: #372F38;
+            border-radius: 4px;
+            padding: 20px;
+            border: 1px solid #4a4a4a;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            margin-bottom: 10px;
+            max-height: calc(100vh - 450px);
+        }
+
+        .marks-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #3d3d3d;
+        }
+
+        .marks-header h2 {
+            color: #b0b0b0;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .marks-list {
+            list-style: none;
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .marks-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .marks-list::-webkit-scrollbar-track {
+            background: #3d3d3d;
+            border-radius: 4px;
+        }
+
+        .marks-list::-webkit-scrollbar-thumb {
+            background: #4a4a4a;
+            border-radius: 4px;
+        }
+
+        .marks-list::-webkit-scrollbar-thumb:hover {
+            background: #5a5a5a;
+        }
+
+        .mark-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: #424242;
+            border-radius: 3px;
+            margin-bottom: 6px;
+            transition: background 0.15s ease;
+            border-left: 3px solid #7c5c9c;
+        }
+
+        .mark-item:hover {
+            background: #4a4a4a;
+        }
+
+        .mark-item.mark-error {
+            border-left-color: #8a3a3a;
+        }
+
+        .mark-time {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 2px;
+            transition: background 0.2s;
+        }
+
+        .mark-time:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .time-component {
+            display: inline-block;
+            padding: 2px 3px;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .time-component:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .mark-item.mark-bloc {
+            border-left-color: #5a5a5a;
+            background: #3a3a3a;
+        }
+
+        .mark-item.mark-tc {
+            border-left-color: #3a7a5a;
+        }
+
+        .mark-type {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 2px;
+            text-transform: uppercase;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .mark-type.type-error {
+            background: #8a3a3a;
+            color: #fff;
+        }
+
+        .mark-type.type-bloc {
+            background: #5a5a5a;
+            color: #d4d4d4;
+        }
+
+        .mark-type.type-tc {
+            background: #3a7a5a;
+            color: #fff;
+        }
+
+        .bloc-separator {
+            text-align: center;
+            color: #808080;
+            font-style: italic;
+            padding: 8px;
+        }
+
+        .mark-number {
+            background: #4a4a4a;
+            color: #b0b0b0;
+            width: 26px;
+            height: 26px;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .mark-time {
+            font-family: 'Consolas', 'Courier New', monospace;
+            color: #8ab4d4;
+            font-weight: 400;
+            flex-shrink: 0;
+            font-size: 0.95rem;
+        }
+
+        .mark-text {
+            flex: 1;
+            min-width: 0;
+            background: transparent;
+            border: 1px solid transparent;
+            color: #d4d4d4;
+            padding: 6px 10px;
+            border-radius: 3px;
+            font-size: 0.9rem;
+            transition: all 0.15s ease;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .mark-text:hover {
+            border-color: #5a5a5a;
+            background: #3a3a3a;
+        }
+
+        .mark-text:focus {
+            outline: none;
+            border-color: #4a6a8a;
+            background: #3a3a3a;
+        }
+
+        .mark-text::placeholder {
+            color: #606060;
+        }
+
+        .mark-delete {
+            background: transparent;
+            border: none;
+            color: #707070;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 4px 8px;
+            border-radius: 3px;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .mark-delete:hover {
+            background: #8a3a3a;
+            color: #fff;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #606060;
+            padding: 40px;
+            font-style: normal;
+            font-size: 0.9rem;
+        }
+
+        .info-section {
+            background: #372F38;
+            border-radius: 4px;
+            padding: 20px;
+            border: 1px solid #4a4a4a;
+            margin-bottom: 25px;
+        }
+
+        .controls-section {
+            background: #372F38;
+            border-radius: 4px;
+            padding: 20px;
+            border: 1px solid #4a4a4a;
+            margin-bottom: 0;
+            margin-top: -23px;
+            border-top: none;
+        }
+
+        .controls-section .controls {
+            margin-bottom: 15px;
+        }
+
+        .controls-section .controls:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .info-field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .info-field.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .info-field label {
+            color: #b0b0b0;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-field input {
+            background: #424242;
+            border: 1px solid #4a4a4a;
+            border-radius: 3px;
+            padding: 10px 12px;
+            color: #d4d4d4;
+            font-size: 0.9rem;
+            transition: all 0.15s ease;
+        }
+
+        .info-field input:hover {
+            border-color: #5a5a5a;
+        }
+
+        .info-field input:focus {
+            outline: none;
+            border-color: #7c5c9c;
+            background: #3a3a3a;
+        }
+
+        .info-field input::placeholder {
+            color: #606060;
+        }
+
+        @media (max-width: 600px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            .timer-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .timer-display {
+                font-size: 2.5rem;
+                padding: 20px;
+            }
+            .tc-display {
+                padding: 15px;
+                min-width: auto;
+            }
+
+            .btn {
+                padding: 10px 16px;
+                font-size: 0.8rem;
+            }
+
+            .mark-item {
+                flex-wrap: wrap;
+            }
+
+            .mark-text {
+                width: 100%;
+                margin-top: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>F.A.L.L.O.</h1>
+        <div class="subtitle">Finder And Logger of Lost Occurrences</div>
+ 
+        <div class="info-wrapper">
+            <div class="info-section">
+                <div class="info-grid">
+                    <div class="info-field full-width">
+                        <label for="infoPrograma">Programa / Programa</label>
+                        <input type="text" id="infoPrograma" placeholder="Introdueix el programa...">
+                    </div>
+                    <div class="info-field">
+                        <label for="infoEpisodi">Episodi / Episodio</label>
+                        <input type="text" id="infoEpisodi" placeholder="Numero de episodi...">
+                    </div>
+                    <div class="info-field">
+                        <label for="infoContingut">Contenido / Contingut</label>
+                        <input type="text" id="infoContingut" placeholder="Contingut...">
+                    </div>
+                    <div class="info-field">
+                        <label for="infoData">Data / Fecha</label>
+                        <input type="date" id="infoData">
+                    </div>
+                    <div class="info-field">
+                        <label for="infoDataEmissio">Data d'emissió / Fecha de emisión</label>
+                        <input type="date" id="infoDataEmissio">
+                    </div>
+                    <div class="info-field full-width">
+                        <label for="infoObservacions">Observacions generals / Observaciones generales</label>
+                        <textarea id="infoObservacions" placeholder="Anotacions generals sobre la sessió..." style="background: #424242; border: 1px solid #4a4a4a; border-radius: 3px; padding: 10px 12px; color: #d4d4d4; font-size: 0.9rem; resize: vertical; min-height: 60px; font-family: inherit;"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <div class="controls">
+                    <button class="btn btn-reset" id="btnReset">Reinicia</button>
+                    <button class="btn btn-export" id="btnExportSession">Exportar Sessió</button>
+                    <button class="btn btn-export" id="btnImportSession">Importar Sessió</button>
+                    <input type="file" id="sessionFileInput" style="display: none;" accept=".json">
+                </div>
+                <div class="controls">
+                    <button class="btn btn-tc-in" id="btnTcIn" disabled>T.C. IN(F1)</button>
+                    <button class="btn btn-tc-out" id="btnTcOut" disabled>T.C. OUT (F2)</button>
+                    <button class="btn btn-mark" id="btnMark" disabled>ERROR (F3/ENTER)</button>
+                    <button class="btn btn-bloc" id="btnBloc" disabled>BLOC (F4)</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+        <div class="timer-container">
+            <div class="timer-display" id="timerDisplay">
+                00:00:00
+            </div>
+            <div class="tc-display">
+                <div class="tc-display-label">T.C.</div>
+                <div class="tc-display-value" id="tcDisplay">--:--:--</div>
+                <div style="display: flex; gap: 5px; margin-top: 8px; justify-content: center; align-items: center; width: 100%;">
+                    <button style="background: #424242; border: 1px solid #4a4a4a; color: #d4d4d4; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 0.7rem;" id="btnTcMinus">-</button>
+                    <input type="number" id="tcOffset" placeholder="0" style="width: 35px; height: 24px; background: #424242; border: 1px solid #4a4a4a; color: #d4d4d4; padding: 3px 5px; border-radius: 3px; text-align: center; font-size: 0.8rem;" min="-3600" max="3600" value="0">
+                    <button style="background: #424242; border: 1px solid #4a4a4a; color: #d4d4d4; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 0.7rem;" id="btnTcPlus">+</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="marks-section">
+            <div class="marks-header">
+                <h2>Marques de temps</h2>
+                <div class="export-buttons">
+                    <button class="btn btn-export" id="btnExportWord" disabled>Exportar Word</button>
+                    <button class="btn btn-export" id="btnExportPdf" disabled>Exportar PDF</button>
+                    <button class="btn btn-export" id="btnExportAvid" disabled>Exportar AVID</button>
+                </div>
+            </div>
+
+            <ul class="marks-list" id="marksList">
+                <li class="empty-message">Inicia el cronometre i prem "+" per afegir marques</li>
+            </ul>
+        </div>
+        </div>
+    </div>
+
+    <script>
+        // Claves de localStorage
+        const STORAGE_KEY = 'cronometro_data';
+
+        // Variables del cronómetro
+        let timerInterval = null;
+        let tcInterval = null; // Intervalo separado para actualizar TC siempre
+        let elapsedSeconds = 0;
+        let startEpoch = null; // Timestamp de inicio (ms) para calcular tiempo real
+        let pausedTime = 0; // Tiempo acumulado cuando está pausado
+        let isRunning = false;
+        let marks = [];
+        let tcInTime = null; // Guarda el tiempo de TC IN pendiente
+        let tcInMarkId = null; // Marca TC pendiente para cerrar en TC OUT
+        let tcOffset = 0; // Offset en segundos para ajustar el TC
+
+        // Guardar datos en localStorage
+        function saveToStorage() {
+            const data = {
+                pausedTime: pausedTime,
+                startEpoch: startEpoch,
+                marks: marks,
+                wasRunning: isRunning,
+                savedAt: Date.now(),
+                tcInTime: tcInTime,
+                tcInMarkId: tcInMarkId,
+                tcOffset: tcOffset,
+                info: {
+                    programa: document.getElementById('infoPrograma')?.value || '',
+                    episodi: document.getElementById('infoEpisodi')?.value || '',
+                    contingut: document.getElementById('infoContingut')?.value || '',
+                    data: document.getElementById('infoData')?.value || '',
+                    dataEmissio: document.getElementById('infoDataEmissio')?.value || '',
+                    observacions: document.getElementById('infoObservacions')?.value || ''
+                }
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        // Cargar datos de localStorage
+        function loadFromStorage() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    pausedTime = data.pausedTime || 0;
+                    startEpoch = data.startEpoch || null;
+                    marks = data.marks || [];
+                    tcInTime = data.tcInTime || null;
+                    tcInMarkId = data.tcInMarkId || null;
+                    tcOffset = data.tcOffset || 0;
+
+                    // Cargar información
+                    if (data.info) {
+                        setTimeout(() => {
+                            if (document.getElementById('infoPrograma')) document.getElementById('infoPrograma').value = data.info.programa || '';
+                            if (document.getElementById('infoEpisodi')) document.getElementById('infoEpisodi').value = data.info.episodi || '';
+                            if (document.getElementById('infoContingut')) document.getElementById('infoContingut').value = data.info.contingut || '';
+                            if (document.getElementById('infoData')) document.getElementById('infoData').value = data.info.data || '';
+                            if (document.getElementById('infoDataEmissio')) document.getElementById('infoDataEmissio').value = data.info.dataEmissio || '';
+                            if (document.getElementById('infoObservacions')) document.getElementById('infoObservacions').value = data.info.observacions || '';
+                        }, 0);
+                    }
+
+                    // Si estaba corriendo, ajustar startEpoch para que el tiempo transcurrido se mantenga
+                    if (data.wasRunning && data.savedAt) {
+                        if (startEpoch) {
+                            // Si hay startEpoch, retroceder según tiempo transcurrido
+                            const timePassed = Math.floor((Date.now() - data.savedAt) / 1000);
+                            startEpoch -= timePassed * 1000;
+                        } else {
+                            // Si no hay startEpoch pero estaba corriendo, inicializar uno ahora
+                            startEpoch = Date.now() - (pausedTime * 1000);
+                        }
+                    }
+
+                    return data.wasRunning || false;
+                } catch (e) {
+                    console.error('Error loading from localStorage:', e);
+                }
+            }
+            return false;
+        }
+
+        // Limpiar localStorage
+        function clearStorage() {
+            localStorage.removeItem(STORAGE_KEY);
+        }
+
+        // Elementos del DOM
+        const timerDisplay = document.getElementById('timerDisplay');
+        const tcDisplay = document.getElementById('tcDisplay');
+        const btnStart = document.getElementById('btnStart');
+        const btnMark = document.getElementById('btnMark');
+        const btnBloc = document.getElementById('btnBloc');
+        const btnTcIn = document.getElementById('btnTcIn');
+        const btnTcOut = document.getElementById('btnTcOut');
+        const btnExportWord = document.getElementById('btnExportWord');
+        const btnExportPdf = document.getElementById('btnExportPdf');
+        const btnExportAvid = document.getElementById('btnExportAvid');
+        const marksList = document.getElementById('marksList');
+
+        // Campos de información
+        const infoPrograma = document.getElementById('infoPrograma');
+        const infoEpisodi = document.getElementById('infoEpisodi');
+        const infoContingut = document.getElementById('infoContingut');
+        const infoData = document.getElementById('infoData');
+        const infoDataEmissio = document.getElementById('infoDataEmissio');
+        const infoObservacions = document.getElementById('infoObservacions');
+
+        // Formatear tiempo a HH:MM:SS (para el cronómetro)
+        function formatTime(totalSeconds) {
+            // Asegurar que el tiempo nunca sea negativo
+            const safeSeconds = Math.max(0, totalSeconds);
+            
+            const hours = Math.floor(safeSeconds / 3600);
+            const minutes = Math.floor((safeSeconds % 3600) / 60);
+            const seconds = Math.floor(safeSeconds % 60);
+
+            return [
+                hours.toString().padStart(2, '0'),
+                minutes.toString().padStart(2, '0'),
+                seconds.toString().padStart(2, '0')
+            ].join(':');
+        }
+
+        // Obtener hora actual en GMT+1 formateada como HH:MM:SS
+        function getCurrentTimeGMT1() {
+            const now = new Date();
+            // Aplicar offset en milisegundos
+            const offsetMs = tcOffset * 1000;
+            const adjustedTime = new Date(now.getTime() + offsetMs);
+            
+            // Usar toLocaleString para obtener la hora local y convertir a GMT+1
+            const timeString = adjustedTime.toLocaleString('es-ES', {
+                timeZone: 'Europe/Madrid', // GMT+1 en invierno, GMT+2 en verano (automático)
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            return timeString;
+        }
+
+        // Actualizar display del timer (basado en tiempo real)
+        function updateDisplay() {
+            if (isRunning && startEpoch) {
+                elapsedSeconds = pausedTime + Math.floor((Date.now() - startEpoch) / 1000);
+            } else {
+                elapsedSeconds = pausedTime;
+            }
+            timerDisplay.textContent = formatTime(elapsedSeconds);
+        }
+
+        // Actualizar display del TC (hora actual GMT+1) - corre siempre independientemente
+        function updateTcDisplay() {
+            tcDisplay.textContent = getCurrentTimeGMT1();
+        }
+
+        // Función para animar TC continuamente con requestAnimationFrame (máxima eficiencia)
+        function animateTc() {
+            updateTcDisplay();
+            requestAnimationFrame(animateTc);
+        }
+
+        // Esperar al próximo cambio de segundo del TC y capturar en ese momento
+        async function captureAtTcChange() {
+            return new Promise((resolve) => {
+                const currentTc = getCurrentTimeGMT1();
+                const checkChange = () => {
+                    const newTc = getCurrentTimeGMT1();
+                    if (newTc !== currentTc) {
+                        // El segundo cambió, resolver con el nuevo valor
+                        resolve(newTc);
+                    } else {
+                        // Esperar siguiente frame
+                        requestAnimationFrame(checkChange);
+                    }
+                };
+                checkChange();
+            });
+        }
+
+        // Iniciar cronómetro
+        function startTimer(options = {}) {
+            const { autoTcIn = true } = options;
+            if (!isRunning) {
+                isRunning = true;
+                // Solo inicializar startEpoch si no fue restaurado desde localStorage
+                if (!startEpoch) {
+                    startEpoch = Date.now();
+                }
+                timerInterval = setInterval(() => {
+                    updateDisplay();
+                    saveToStorage();
+                }, 100); // Actualizar más frecuentemente para mayor precisión
+
+                btnMark.disabled = false;
+                btnBloc.disabled = false;
+                if (autoTcIn && tcInTime === null) {
+                    addTcIn();
+                } else {
+                    updateTcButtons();
+                }
+                timerDisplay.classList.add('recording');
+                saveToStorage();
+            }
+        }
+
+        // Pausar cronómetro
+        function pauseTimer() {
+            if (isRunning) {
+                isRunning = false;
+                pausedTime = elapsedSeconds; // Guardar el tiempo actual
+                startEpoch = null; // Limpiar el epoch
+                clearInterval(timerInterval);
+                timerDisplay.classList.remove('recording');
+                updateDisplay(); // Actualizar inmediatamente para reflejar el tiempo exacto
+                saveToStorage();
+            }
+        }
+
+        // Aturar cronómetro
+        function stopTimer() {
+            isRunning = false;
+            startEpoch = null;
+            pausedTime = elapsedSeconds;
+            clearInterval(timerInterval);
+            timerDisplay.classList.remove('recording');
+
+            btnMark.disabled = false;  // Permitir seguir añadiendo marcas fuera de tiempo
+            btnBloc.disabled = false;  // Permitir separadores
+            btnTcIn.disabled = true;
+            btnTcOut.disabled = true;
+
+            updateExportButtons();
+            saveToStorage();
+        }
+
+        // Añadir marca de ERROR
+        function addMark() {
+            ensureInitialBloc();
+            const mark = {
+                id: Date.now(),
+                type: 'error',
+                time: getCurrentTimeGMT1(),
+                seconds: elapsedSeconds,
+                text: ''
+            };
+
+            marks.push(mark);
+            renderMarks();
+            focusMarkInput(mark.id); // Enfocar input para escribir inmediatamente
+            scrollToPageBottom();
+            updateExportButtons();
+            saveToStorage();
+        }
+
+        // Añadir BLOC (separador)
+        function addBloc() {
+            ensureInitialBloc();
+            const mark = createBlocMark();
+
+            marks.push(mark);
+            renderMarks();
+            scrollToPageBottom();
+            updateExportButtons();
+            saveToStorage();
+        }
+
+        // Iniciar T.C. IN o pausar si ya está en marcha
+        function addTcIn() {
+            if (isRunning) {
+                // Si ya está corriendo, pausar
+                pauseTimer();
+            } else {
+                // Si no está corriendo, iniciar
+                if (elapsedSeconds === 0) {
+                    // Primera vez: iniciar timer y crear TC IN
+                    startTimer({ autoTcIn: false });
+                    ensureInitialBloc();
+                    tcInTime = getCurrentTimeGMT1();
+                    const mark = {
+                        id: Date.now(),
+                        type: 'tc',
+                        timeIn: tcInTime,
+                        secondsIn: elapsedSeconds,
+                        pausedTimeBefore: pausedTime,
+                        timeOut: null,
+                        seconds: elapsedSeconds,
+                        text: ''
+                    };
+                    marks.push(mark);
+                    tcInMarkId = mark.id;
+                    renderMarks();
+                    focusMarkInput(mark.id); // Enfocar input para escribir inmediatamente
+                    scrollToPageBottom();
+                    updateExportButtons();
+                    btnTcIn.disabled = false;
+                    btnTcOut.disabled = false;
+                    saveToStorage();
+                } else if (tcInTime === null) {
+                    // Ya hay time pero sin TC IN abierto
+                    startTimer({ autoTcIn: false });
+                    ensureInitialBloc();
+                    tcInTime = getCurrentTimeGMT1();
+                    const mark = {
+                        id: Date.now(),
+                        type: 'tc',
+                        timeIn: tcInTime,
+                        secondsIn: elapsedSeconds,
+                        pausedTimeBefore: pausedTime,
+                        timeOut: null,
+                        seconds: elapsedSeconds,
+                        text: ''
+                    };
+                    marks.push(mark);
+                    tcInMarkId = mark.id;
+                    renderMarks();
+                    focusMarkInput(mark.id); // Enfocar input para escribir inmediatamente
+                    scrollToPageBottom();
+                    updateExportButtons();
+                    btnTcIn.disabled = false;
+                    btnTcOut.disabled = false;
+                    saveToStorage();
+                } else {
+                    // TC IN ya abierto, simplemente reanudar
+                    startTimer({ autoTcIn: false });
+                }
+            }
+            updateTcButtons();
+        }
+
+        // Finalizar T.C. OUT
+        function addTcOut() {
+            if (tcInTime === null) return;
+
+            const mark = tcInMarkId
+                ? marks.find((m) => m.id === tcInMarkId && m.type === 'tc' && m.timeOut === null)
+                : marks.find((m) => m.type === 'tc' && m.timeOut === null);
+            if (mark) {
+                mark.timeOut = getCurrentTimeGMT1();
+                mark.seconds = elapsedSeconds;
+            }
+            tcInTime = null;
+            tcInMarkId = null;
+            btnTcIn.disabled = false;
+            btnTcOut.disabled = true;
+            pauseTimer();
+            renderMarks();
+            scrollToPageBottom();
+            updateExportButtons();
+            saveToStorage();
+        }
+
+        // Actualizar estado de botones TC
+        function updateTcButtons() {
+            if (isRunning) {
+                btnTcIn.disabled = tcInTime !== null;
+                btnTcOut.disabled = tcInTime === null;
+            } else {
+                // Cuando no está corriendo
+                btnTcIn.disabled = false;  // Siempre disponible para iniciar
+                btnTcOut.disabled = tcInTime === null;  // Solo si hay TC IN abierto
+            }
+        }
+
+        // Eliminar marca
+        function deleteMark(id) {
+            if (marks.length > 0 && marks[0].type === 'bloc' && marks[0].id === id) {
+                return;
+            }
+            
+            // Si es un TC completo, restar su duración del cronómetro
+            const mark = marks.find(m => m.id === id);
+            if (mark && mark.type === 'tc' && mark.timeOut !== null && mark.timeIn !== null) {
+                // Calcular la duración basada en los tiempos reales (timeIn y timeOut)
+                const timeInSecs = timeToSeconds(mark.timeIn);
+                const timeOutSecs = timeToSeconds(mark.timeOut);
+                let tcDuration = timeOutSecs - timeInSecs;
+                
+                // Si timeOut es menor que timeIn (cruza medianoche), ajustar
+                if (tcDuration < 0) {
+                    tcDuration += 86400; // agregar 24 horas
+                }
+                
+                pausedTime = Math.max(0, pausedTime - tcDuration);
+                elapsedSeconds = pausedTime;
+                updateDisplay();
+                console.log(`TC eliminado: duración = ${tcDuration}s, pausedTime nuevo = ${pausedTime}s`);
+            }
+            
+            // Si es un TC pendiente (sin timeOut), pausar y volver al tiempo anterior
+            if (mark && mark.type === 'tc' && mark.timeOut === null) {
+                pauseTimer();
+                // Restaurar el tiempo que había antes del TC IN
+                if (mark.pausedTimeBefore !== undefined) {
+                    pausedTime = mark.pausedTimeBefore;
+                    elapsedSeconds = mark.pausedTimeBefore;
+                } else {
+                    elapsedSeconds = 0;
+                    pausedTime = 0;
+                }
+                startEpoch = null;
+                updateDisplay();
+            }
+            
+            if (id === tcInMarkId) {
+                tcInTime = null;
+                tcInMarkId = null;
+                updateTcButtons();
+            }
+            marks = marks.filter(mark => mark.id !== id);
+            renderMarks();
+            updateExportButtons();
+            saveToStorage();
+        }
+
+        // Actualizar texto de marca
+        function updateMarkText(id, text) {
+            const mark = marks.find(m => m.id === id);
+            if (mark) {
+                mark.text = text;
+                saveToStorage();
+            }
+        }
+
+        // Convertir tiempo HH:MM:SS a segundos
+        function timeToSeconds(timeStr) {
+            const parts = timeStr.split(':');
+            if (parts.length !== 3) return 0;
+            return (parseInt(parts[0], 10) * 3600) + (parseInt(parts[1], 10) * 60) + parseInt(parts[2], 10);
+        }
+
+        // Encontrar el primer TC IN (punto de referencia 00:00:00)
+        function getFirstTcIn() {
+            for (let i = 0; i < marks.length; i++) {
+                if (marks[i].type === 'tc' && marks[i].timeIn && marks[i].timeIn !== '--:--:--') {
+                    return marks[i].timeIn;
+                }
+            }
+            return null;
+        }
+
+        // Encontrar el ID de la primera marca TC
+        function getFirstTcInMarkId() {
+            for (let i = 0; i < marks.length; i++) {
+                if (marks[i].type === 'tc' && marks[i].timeIn && marks[i].timeIn !== '--:--:--') {
+                    return marks[i].id;
+                }
+            }
+            return null;
+        }
+
+        // Calcular el tiempo mínimo permitido (basado en el primer TC IN)
+        function getMinimumAllowedTime(currentTime, timeFieldName, markId) {
+            const firstTcIn = getFirstTcIn();
+            const firstTcInMarkId = getFirstTcInMarkId();
+            
+            if (!firstTcIn) {
+                // Si no hay TC IN, no hay límite mínimo
+                return 0;
+            }
+
+            // Si estamos editando el PRIMER TC IN, no hay restricción mínima
+            if (timeFieldName === 'timeIn' && markId === firstTcInMarkId) {
+                return 0; // Sin restricción
+            }
+
+            // Para cualquier otro tiempo, no puede ser menor que el primer TC IN
+            return timeToSeconds(firstTcIn);
+        }
+
+        // Editar componente de tiempo (HH:MM:SS)
+        function editTimeComponent(markId, timeFieldName) {
+            const mark = marks.find(m => m.id === markId);
+            if (!mark) {
+                console.error('Mark no encontrada:', markId);
+                return;
+            }
+
+            let currentTime = '';
+            if (timeFieldName === 'timeIn' || timeFieldName === 'timeOut' || timeFieldName === 'time') {
+                currentTime = mark[timeFieldName] || '--:--:--';
+            } else {
+                console.error('Campo de tiempo inválido:', timeFieldName);
+                return;
+            }
+
+            // Si el tiempo es '--:--:--', no permitir editar
+            if (currentTime === '--:--:--') {
+                alert('No se puede editar un tiempo vacío. Primero completa la marca.');
+                return;
+            }
+
+            // Parsear el tiempo
+            const parts = currentTime.split(':');
+            if (parts.length !== 3) {
+                console.error('Formato de tiempo inválido:', currentTime);
+                alert('Formato de tiempo inválido. Esperado HH:MM:SS');
+                return;
+            }
+
+            const hours = parseInt(parts[0], 10);
+            const minutes = parseInt(parts[1], 10);
+            const seconds = parseInt(parts[2], 10);
+
+            // Validar que los valores parseados sean válidos
+            if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
+                console.error('Valores de tiempo no numéricos:', parts);
+                alert('Error al leer el tiempo. Verifica el formato.');
+                return;
+            }
+
+            // Crear un modal simple para editar
+            const container = document.createElement('div');
+            container.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: #2a1f30;
+                border: 2px solid #7c5c9c;
+                border-radius: 8px;
+                padding: 20px;
+                z-index: 10000;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                color: #d4d4d4;
+            `;
+
+            const title = document.createElement('div');
+            title.style.cssText = 'margin-bottom: 15px; font-weight: bold; color: #e0e0e0;';
+            title.textContent = `Editar tiempo`;
+            container.appendChild(title);
+
+            // Crear inputs para cada componente
+            const editorDiv = document.createElement('div');
+            editorDiv.style.cssText = 'display: flex; gap: 10px; align-items: center; margin-bottom: 15px;';
+
+            const createInput = (value, max, label) => {
+                const wrapper = document.createElement('div');
+                wrapper.style.cssText = 'display: flex; flex-direction: column; align-items: center;';
+
+                const label_el = document.createElement('label');
+                label_el.style.cssText = 'font-size: 0.8rem; color: #b0b0b0; margin-bottom: 5px;';
+                label_el.textContent = label;
+
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.value = value;
+                input.min = '0';
+                input.max = max;
+                input.style.cssText = `
+                    width: 50px;
+                    padding: 8px;
+                    background: #424242;
+                    border: 1px solid #4a4a4a;
+                    border-radius: 3px;
+                    color: #d4d4d4;
+                    text-align: center;
+                    font-size: 16px;
+                `;
+
+                // Bloquear tecla "-" y mantener siempre positivo
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === '-' || e.key === '+') {
+                        e.preventDefault();
+                    }
+                });
+
+                // Validar al escribir
+                input.addEventListener('input', () => {
+                    let val = parseInt(input.value, 10);
+                    
+                    // Si es NaN, establecer a 0
+                    if (isNaN(val)) {
+                        input.value = '0';
+                        return;
+                    }
+                    
+                    // Forzar positivo usando Math.max
+                    val = Math.max(0, val);
+                    
+                    // Validar máximo
+                    if (parseInt(max, 10) && val > parseInt(max, 10)) {
+                        val = parseInt(max, 10);
+                    }
+                    
+                    input.value = val;
+                });
+
+                // Al salir, asegurar que es positivo
+                input.addEventListener('blur', () => {
+                    let val = parseInt(input.value, 10);
+                    if (isNaN(val) || val < 0) {
+                        input.value = '0';
+                    } else if (parseInt(max, 10) && val > parseInt(max, 10)) {
+                        input.value = max;
+                    } else {
+                        input.value = val;
+                    }
+                });
+
+                wrapper.appendChild(label_el);
+                wrapper.appendChild(input);
+                return { wrapper, input };
+            };
+
+            const hoursEl = createInput(hours, '23', 'Horas');
+            const minutesEl = createInput(minutes, '59', 'Minutos');
+            const secondsEl = createInput(seconds, '59', 'Segundos');
+
+            editorDiv.appendChild(hoursEl.wrapper);
+            const colon1 = document.createElement('span');
+            colon1.textContent = ':';
+            colon1.style.cssText = 'color: #d4d4d4; font-weight: bold; margin-top: 18px;';
+            editorDiv.appendChild(colon1);
+
+            editorDiv.appendChild(minutesEl.wrapper);
+            const colon2 = document.createElement('span');
+            colon2.textContent = ':';
+            colon2.style.cssText = 'color: #d4d4d4; font-weight: bold; margin-top: 18px;';
+            editorDiv.appendChild(colon2);
+
+            editorDiv.appendChild(secondsEl.wrapper);
+            container.appendChild(editorDiv);
+
+            // Botones
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.style.cssText = 'display: flex; gap: 10px; justify-content: flex-end;';
+
+            const btnCancel = document.createElement('button');
+            btnCancel.textContent = 'Cancelar';
+            btnCancel.style.cssText = `
+                padding: 8px 16px;
+                background: #424242;
+                border: 1px solid #4a4a4a;
+                border-radius: 3px;
+                color: #d4d4d4;
+                cursor: pointer;
+                font-size: 0.9rem;
+            `;
+            
+            // Agregar overlay ANTES de los botones para que podamos referenciarlo
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.7);
+                z-index: 9999;
+            `;
+            
+            const closeModal = () => {
+                if (container.parentNode) document.body.removeChild(container);
+                if (overlay.parentNode) document.body.removeChild(overlay);
+            };
+            
+            btnCancel.onclick = closeModal;
+            overlay.onclick = closeModal;
+
+            const btnSave = document.createElement('button');
+            btnSave.textContent = 'Guardar';
+            btnSave.style.cssText = `
+                padding: 8px 16px;
+                background: #7c5c9c;
+                border: none;
+                border-radius: 3px;
+                color: #fff;
+                cursor: pointer;
+                font-size: 0.9rem;
+            `;
+            btnSave.onclick = () => {
+                try {
+                    let newHours = parseInt(hoursEl.input.value, 10);
+                    let newMinutes = parseInt(minutesEl.input.value, 10);
+                    let newSeconds = parseInt(secondsEl.input.value, 10);
+
+                    // Fijar NaN a 0 y forzar positivos con Math.max
+                    newHours = Math.max(0, isNaN(newHours) ? 0 : newHours);
+                    newMinutes = Math.max(0, isNaN(newMinutes) ? 0 : newMinutes);
+                    newSeconds = Math.max(0, isNaN(newSeconds) ? 0 : newSeconds);
+
+                    // Validar rangos (no debería fallarse debido a min/max en HTML, pero por seguridad)
+                    if (newHours > 23 || newMinutes > 59 || newSeconds > 59) {
+                        alert('Valores inválidos.\nHoras: 0-23\nMinutos: 0-59\nSegundos: 0-59');
+                        return;
+                    }
+
+                    const newTime = `${String(newHours).padStart(2, '0')}:${String(newMinutes).padStart(2, '0')}:${String(newSeconds).padStart(2, '0')}`;
+
+                    // Validar que el tiempo no sea menor que el primer TC IN (el punto de referencia)
+                    // EXCEPTO si es el primer TC IN que se está editando
+                    const minimumAllowed = getMinimumAllowedTime(currentTime, timeFieldName, markId);
+                    const newTotalSecs = (newHours * 3600) + (newMinutes * 60) + newSeconds;
+
+                    if (newTotalSecs < minimumAllowed) {
+                        const firstTcIn = getFirstTcIn();
+                        if (firstTcIn) {
+                            alert(`No puedes establecer un tiempo menor que el primer TC IN (${firstTcIn}).\n\nEl primer TC IN es el punto 00:00:00.`);
+                        } else {
+                            alert('El tiempo no puede ser negativo.');
+                        }
+                        return;
+                    }
+
+                    // Calcular la diferencia de tiempo en segundos
+                    const oldTimeParts = currentTime.split(':');
+                    const oldTotalSecs = (parseInt(oldTimeParts[0], 10) * 3600) + (parseInt(oldTimeParts[1], 10) * 60) + parseInt(oldTimeParts[2], 10);
+                    const timeDiffSeconds = newTotalSecs - oldTotalSecs;
+
+                    const firstTcInId = getFirstTcInMarkId();
+                    const isFirstTcIn = (timeFieldName === 'timeIn' && markId === firstTcInId);
+
+                    console.log(`Actualizando ${timeFieldName} de ${currentTime} a ${newTime}`);
+                    console.log(`Valores parseados: H=${newHours}, M=${newMinutes}, S=${newSeconds}`);
+                    console.log(`Diferencia directa: ${timeDiffSeconds} segundos`);
+                    console.log(`Primer TC IN id: ${firstTcInId}, ¿Estoy editando el primer TC IN?: ${isFirstTcIn}`);
+
+                    // Calcular duración anterior si es un TC (tiene timeIn y timeOut)
+                    let oldTcDuration = 0;
+                    if (mark.type === 'tc' && mark.timeIn && mark.timeOut && mark.timeOut !== '--:--:--') {
+                        const timeInSecs = timeToSeconds(mark.timeIn);
+                        const timeOutSecs = timeToSeconds(mark.timeOut);
+                        oldTcDuration = timeOutSecs - timeInSecs;
+                        if (oldTcDuration < 0) oldTcDuration += 86400;
+                    }
+                    
+                    // Actualizar el tiempo en la marca
+                    if (timeFieldName === 'timeIn' || timeFieldName === 'timeOut') {
+                        mark[timeFieldName] = newTime;
+                    } else if (timeFieldName === 'time') {
+                        mark.time = newTime;
+                    }
+                    
+                    // Calcular nueva duración si es un TC
+                    let newTcDuration = 0;
+                    if (mark.type === 'tc' && mark.timeIn && mark.timeOut && mark.timeOut !== '--:--:--') {
+                        const timeInSecs = timeToSeconds(mark.timeIn);
+                        const timeOutSecs = timeToSeconds(mark.timeOut);
+                        newTcDuration = timeOutSecs - timeInSecs;
+                        if (newTcDuration < 0) newTcDuration += 86400;
+                    }
+                    
+                    // La diferencia en duración del TC
+                    const tcDurationDiff = newTcDuration - oldTcDuration;
+                    
+                    console.log(`TC Duration oldDuration=${oldTcDuration}s, newDuration=${newTcDuration}s, diff=${tcDurationDiff}s`);
+
+                    // Si es el PRIMER TC IN (timeIn), ajustar TODOS los otros tiempos proporcionalmente
+                    if (isFirstTcIn && timeDiffSeconds !== 0) {
+                        console.log(`🔄 Editando PRIMER TC IN: aplicando diferencia de ${timeDiffSeconds}s a todos los tiempos`);
+                        
+                        // Recorrer todas las marcas (excepto la primera que ya fue actualizada)
+                        for (let i = 0; i < marks.length; i++) {
+                            const currentMark = marks[i];
+                            
+                            // No modificar el primer TC IN que ya fue actualizado
+                            if (currentMark.id === markId) {
+                                continue;
+                            }
+                            
+                            // Ajustar timeIn si existe
+                            if (currentMark.timeIn && currentMark.timeIn !== '--:--:--') {
+                                const timeParts = currentMark.timeIn.split(':');
+                                const markSecs = (parseInt(timeParts[0], 10) * 3600) + (parseInt(timeParts[1], 10) * 60) + parseInt(timeParts[2], 10);
+                                const newMarkSecs = Math.max(0, markSecs + timeDiffSeconds);
+                                const newHrs = Math.floor(newMarkSecs / 3600);
+                                const newMins = Math.floor((newMarkSecs % 3600) / 60);
+                                const newSecs = newMarkSecs % 60;
+                                currentMark.timeIn = `${String(newHrs).padStart(2, '0')}:${String(newMins).padStart(2, '0')}:${String(newSecs).padStart(2, '0')}`;
+                            }
+                            
+                            // Ajustar timeOut si existe
+                            if (currentMark.timeOut && currentMark.timeOut !== '--:--:--') {
+                                const timeParts = currentMark.timeOut.split(':');
+                                const markSecs = (parseInt(timeParts[0], 10) * 3600) + (parseInt(timeParts[1], 10) * 60) + parseInt(timeParts[2], 10);
+                                const newMarkSecs = Math.max(0, markSecs + timeDiffSeconds);
+                                const newHrs = Math.floor(newMarkSecs / 3600);
+                                const newMins = Math.floor((newMarkSecs % 3600) / 60);
+                                const newSecs = newMarkSecs % 60;
+                                currentMark.timeOut = `${String(newHrs).padStart(2, '0')}:${String(newMins).padStart(2, '0')}:${String(newSecs).padStart(2, '0')}`;
+                            }
+                            
+                            // Ajustar time si existe (para marcas ERROR/BLOC)
+                            if (currentMark.time && currentMark.time !== '--:--:--') {
+                                const timeParts = currentMark.time.split(':');
+                                const markSecs = (parseInt(timeParts[0], 10) * 3600) + (parseInt(timeParts[1], 10) * 60) + parseInt(timeParts[2], 10);
+                                const newMarkSecs = Math.max(0, markSecs + timeDiffSeconds);
+                                const newHrs = Math.floor(newMarkSecs / 3600);
+                                const newMins = Math.floor((newMarkSecs % 3600) / 60);
+                                const newSecs = newMarkSecs % 60;
+                                currentMark.time = `${String(newHrs).padStart(2, '0')}:${String(newMins).padStart(2, '0')}:${String(newSecs).padStart(2, '0')}`;
+                            }
+                        }
+                        
+                        console.log('✅ Todos los tiempos ajustados según nueva referencia del primer TC IN');
+                    }
+
+                    // Ajustar el cronómetro basado en la duración REAL del TC (diferencia entre IN y OUT)
+                    // Esta es la única forma correcta: cronómetro = suma de duraciones (OUT - IN)
+                    if (mark.type === 'tc' && tcDurationDiff !== 0) {
+                        // Aplicar la diferencia en duración al cronómetro
+                        const newPausedTime = pausedTime + tcDurationDiff;
+                        
+                        if (newPausedTime < 0) {
+                            alert(`⚠️ Esta edición resultaría en una duración total negativa.\n\nDuración actual: ${pausedTime}s`);
+                            return;
+                        }
+                        
+                        pausedTime = newPausedTime;
+                        
+                        // Si el cronómetro está corriendo, ajustar también el startEpoch
+                        if (isRunning && startEpoch) {
+                            startEpoch -= tcDurationDiff * 1000;
+                        }
+                        
+                        // Forzar actualización del display
+                        updateDisplay();
+                        
+                        console.log(`✅ Cronómetro ajustado: ${pausedTime}s (diferencia: ${tcDurationDiff}s)`);
+                    }
+
+                    saveToStorage();
+                    renderMarks();
+                    closeModal();
+                    
+                    console.log('✅ Tiempo actualizado correctamente');
+                } catch (error) {
+                    console.error('Error al guardar el tiempo:', error);
+                    alert('Error al guardar: ' + error.message);
+                }
+            };
+
+            buttonsDiv.appendChild(btnCancel);
+            buttonsDiv.appendChild(btnSave);
+            container.appendChild(buttonsDiv);
+
+            document.body.appendChild(overlay);
+            document.body.appendChild(container);
+
+            // Enfocar el first input
+            hoursEl.input.focus();
+        }
+
+        function createBlocMark() {
+            return {
+                id: Date.now(),
+                type: 'bloc'
+            };
+        }
+
+        function ensureInitialBloc() {
+            // 😎 Ricard, si veus molts errors aquí baix, ja sabes a qui culpar
+            if (marks.length === 0 || marks[0].type !== 'bloc') {
+                marks.unshift(createBlocMark());
+                return true;
+            }
+            return false;
+        }
+
+        function scrollToPageBottom() {
+            const marksList = document.getElementById('marksList');
+            if (marksList) {
+                marksList.scrollTop = marksList.scrollHeight;
+            }
+        }
+
+        // Corregir tiempos negativos o inválidos
+        function fixInvalidTimes() {
+            let hasFixed = false;
+            const validTimeRegex = /^\d{2}:\d{2}:\d{2}$/;
+
+            marks.forEach((mark, index) => {
+                // Verificar y corregir timeIn
+                if (mark.timeIn) {
+                    if (mark.timeIn.includes('-') || !validTimeRegex.test(mark.timeIn)) {
+                        console.warn(`❌ Marca #${index}: Tiempo timeIn inválido: "${mark.timeIn}" → corrigiendo a "00:00:00"`);
+                        mark.timeIn = '00:00:00';
+                        hasFixed = true;
+                    }
+                }
+
+                // Verificar y corregir timeOut
+                if (mark.timeOut && mark.timeOut !== '--:--:--') {
+                    if (mark.timeOut.includes('-') || !validTimeRegex.test(mark.timeOut)) {
+                        console.warn(`❌ Marca #${index}: Tiempo timeOut inválido: "${mark.timeOut}" → corrigiendo a "00:00:00"`);
+                        mark.timeOut = '00:00:00';
+                        hasFixed = true;
+                    }
+                }
+
+                // Verificar y corregir time (ERROR)
+                if (mark.time) {
+                    if (mark.time.includes('-') || !validTimeRegex.test(mark.time)) {
+                        console.warn(`❌ Marca #${index}: Tiempo inválido: "${mark.time}" → corrigiendo a "00:00:00"`);
+                        mark.time = '00:00:00';
+                        hasFixed = true;
+                    }
+                }
+            });
+
+            if (hasFixed) {
+                console.log('⚠️ Se han corregido automáticamente tiempos inválidos (negativos o con formato incorrecto)');
+                saveToStorage();
+            }
+
+            return hasFixed;
+        }
+
+        // Renderizar lista de marcas
+        function renderMarks() {
+            // Corregir cualquier tiempo inválido antes de renderizar
+            fixInvalidTimes();
+
+            const addedInitialBloc = ensureInitialBloc();
+            if (addedInitialBloc) {
+                saveToStorage();
+            }
+            if (marks.length === 0) {
+                marksList.innerHTML = '<li class="empty-message">Inicia el cronometre i fes servir els botons per afegir marques</li>';
+                return;
+            }
+
+            let blocCount = 0;
+            marksList.innerHTML = marks.map((mark, index) => {
+                if (mark.type === 'bloc') {
+                    // BLOC - separador sin tiempo
+                    blocCount++;
+                    return `
+                        <li class="mark-item mark-bloc" data-id="${mark.id}">
+                            <span class="mark-number">${index + 1}</span>
+                            <span class="mark-type type-bloc">BLOC ${blocCount}</span>
+                            <button class="mark-delete" onclick="deleteMark(${mark.id})" title="Elimina">X</button>
+                        </li>
+                    `;
+                } else if (mark.type === 'tc') {
+                    // T.C. - con tiempo IN y OUT
+                    // 👀 De l'Eric al Ricard: revisa bé els valors aquí! Hahah
+                    const timeOutDisplay = mark.timeOut || '--:--:--';
+                    return `
+                        <li class="mark-item mark-tc" data-id="${mark.id}">
+                            <span class="mark-number">${index + 1}</span>
+                            <span class="mark-type type-tc">T.C.</span>
+                            <span class="mark-time" onclick="event.stopPropagation()">[<span class="time-component" onclick="editTimeComponent(${mark.id}, 'timeIn')">${mark.timeIn}</span> - <span class="time-component" onclick="editTimeComponent(${mark.id}, 'timeOut')">${timeOutDisplay}</span>]</span>
+                            <input
+                                type="text"
+                                class="mark-text"
+                                placeholder="Descripcio del fragment..."
+                                value="${escapeHtml(mark.text)}"
+                                onchange="updateMarkText(${mark.id}, this.value)"
+                                oninput="updateMarkText(${mark.id}, this.value)"
+                                data-mark-id="${mark.id}"
+                            >
+                            <button class="mark-delete" onclick="deleteMark(${mark.id})" title="Elimina">X</button>
+                        </li>
+                    `;
+                } else {
+                    // ERROR - marca con tiempo
+                    return `
+                        <li class="mark-item mark-error" data-id="${mark.id}">
+                            <span class="mark-number">${index + 1}</span>
+                            <span class="mark-type type-error">ERROR</span>
+                            <span class="mark-time" onclick="event.stopPropagation()">[<span class="time-component" onclick="editTimeComponent(${mark.id}, 'time')">${mark.time}</span>]</span>
+                            <input
+                                type="text"
+                                class="mark-text"
+                                placeholder="Descripcio de l'error..."
+                                value="${escapeHtml(mark.text)}"
+                                onchange="updateMarkText(${mark.id}, this.value)"
+                                oninput="updateMarkText(${mark.id}, this.value)"
+                                data-mark-id="${mark.id}"
+                            >
+                            <button class="mark-delete" onclick="deleteMark(${mark.id})" title="Elimina">X</button>
+                        </li>
+                    `;
+                }
+            }).join('');
+
+            marksList.scrollTop = marksList.scrollHeight;
+        }
+
+        // Enfocar el input de una marca recién creada para escribir inmediatamente
+        function focusMarkInput(markId) {
+            setTimeout(() => {
+                const input = marksList.querySelector(`input[data-mark-id="${markId}"]`);
+                if (input) {
+                    input.focus();
+                    input.select(); // Seleccionar todo el texto para reemplazarlo fácilmente
+                }
+            }, 0);
+        }
+
+        // Escapar HTML para prevenir XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML.replace(/"/g, '&quot;');
+        }
+
+        // Actualizar estado de botones de exportación
+        function updateExportButtons() {
+            const hasMarks = marks.length > 0;
+            btnExportWord.disabled = !hasMarks;
+            btnExportPdf.disabled = !hasMarks;
+            btnExportAvid.disabled = !hasMarks;
+        }
+
+        // Formatear fecha para mostrar
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('ca-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        function buildExportRows() {
+            let blocCount = 0;
+            return marks.map((mark) => {
+                if (mark.type === 'bloc') {
+                    blocCount++;
+                    return { tcIn: '', obs: `BLOC ${blocCount}`, tcOut: '', type: 'bloc' };
+                }
+                if (mark.type === 'tc') {
+                    const timeOutDisplay = mark.timeOut || '--:--:--';
+                    return { tcIn: mark.timeIn, obs: mark.text || '', tcOut: timeOutDisplay, type: 'tc' };
+                }
+                return { tcIn: mark.time, obs: mark.text || '', tcOut: '', type: 'error' };
+            });
+        }
+
+        // Generar contenido de exportación
+        function generateExportContent() {
+            let content = '';
+
+            // Cabecera con formato de dos columnas
+            const programa = infoPrograma.value || '';
+            const data = infoData.value ? formatDate(infoData.value) : '';
+            const durada = formatTime(elapsedSeconds);
+            const dataEmi = infoDataEmissio.value ? formatDate(infoDataEmissio.value) : '';
+            const contingut = infoContingut.value || '';
+            const episodi = infoEpisodi.value || '';
+
+            // Linia 1: Programa i Data
+            content += `Programa: ${programa.padEnd(50)}DATA: ${data}\n`;
+            // Linia 2: Durada i Data d'emissio
+            content += `Durada APROX: ${durada.padEnd(43)}DATA EMI: ${dataEmi}\n`;
+            // Linia 3: Contingut i EPISODI
+            content += `Contenido: ${contingut.padEnd(46)}EPISODI: ${episodi}\n`;
+
+            content += '\n================================================================================\n\n';
+
+            const rows = buildExportRows();
+            content += `T.C. IN\tT.C. OUT\tOBSERVACIONS\n`;
+            content += `-------\t-------\t-------------\n`;
+            rows.forEach((row) => {
+                content += `${row.tcIn}\t${row.tcOut}\t${row.obs}\n`;
+            });
+
+            return content;
+        }
+
+        function generateExportHtml() {
+            const programa = infoPrograma.value || '';
+            const data = infoData.value ? formatDate(infoData.value) : '';
+            const durada = formatTime(elapsedSeconds);
+            const dataEmi = infoDataEmissio.value ? formatDate(infoDataEmissio.value) : '';
+            const contingut = infoContingut.value || '';
+            const episodi = infoEpisodi.value || '';
+            const observacions = infoObservacions.value || '';
+            const rows = buildExportRows();
+
+            const episodiClean = episodi.replace(/[^a-zA-Z0-9]/g, '_');
+            const programaClean = programa.replace(/[^a-zA-Z0-9]/g, '_');
+            const pdfTitle = episodiClean && programaClean ? `${programaClean}_${episodiClean}` : episodiClean || programaClean || 'FALLO';
+
+            return `
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <title>${escapeHtml(pdfTitle)}</title>
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { font-family: Arial, sans-serif; font-size: 11pt; color: #000; background: #fff; padding: 0; margin: 0; }
+                        .header-table { width: 100%; margin-bottom: 16px; border-collapse: collapse; }
+                        .header-table td { padding: 3px 8px; vertical-align: top; color: #000; font-size: 11pt; }
+                        .header-table .left { width: 60%; }
+                        .header-table .right { width: 40%; }
+                        .label { font-weight: bold; }
+                        hr { border: none; border-top: 1px solid #999; margin: 0 0 10px 0; }
+                        .marks-table { width: 100%; border-collapse: collapse; margin-top: 0; }
+                        .marks-table th { background: #4a4a4a; color: #fff; text-align: center; padding: 4px 6px; font-size: 10pt; border: 1px solid #4a4a4a; }
+                        .marks-table td { border: 1px solid #ccc; padding: 3px 6px; vertical-align: top; line-height: 1.3; color: #000; font-size: 10pt; }
+                        .marks-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                        .tc-cell { text-align: center; width: 15%; }
+                        .obs-cell { text-align: left; }
+                        .error-row td { color: #cc0000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                        .bloc-row td { font-weight: bold; }
+                        .observacions-section { margin-top: 16px; padding: 10px; border: 1px solid #ccc; }
+                        .observacions-section p { color: #000; white-space: pre-wrap; margin-top: 4px; }
+                        @page { margin: 15mm; }
+                    </style>
+                </head>
+                <body>
+                    <table class="header-table">
+                        <tr>
+                            <td class="left"><span class="label">Programa:</span> ${escapeHtml(programa)}</td>
+                            <td class="right"><span class="label">DATA:</span> ${escapeHtml(data)}</td>
+                        </tr>
+                        <tr>
+                            <td class="left"><span class="label">Durada APROX:</span> ${escapeHtml(durada)}</td>
+                            <td class="right"><span class="label">DATA EMI:</span> ${escapeHtml(dataEmi)}</td>
+                        </tr>
+                        <tr>
+                            <td class="left"><span class="label">Contenido:</span> ${escapeHtml(contingut)}</td>
+                            <td class="right"><span class="label">EPISODI:</span> ${escapeHtml(episodi)}</td>
+                        </tr>
+                    </table>
+                    <hr>
+                    ${observacions ? `
+                    <div class="observacions-section">
+                        <span class="label">Observacions generals:</span>
+                        <p>${escapeHtml(observacions)}</p>
+                    </div>
+                    ` : ''}
+                    <table class="marks-table">
+                        <thead>
+                            <tr>
+                                <th>T.C. IN</th>
+                                <th>T.C. OUT</th>
+                                <th>Observacions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows.map((row) => `
+                                <tr ${row.type === 'error' ? 'class="error-row"' : row.type === 'bloc' ? 'class="bloc-row"' : ''}>
+                                    <td class="tc-cell">${escapeHtml(row.tcIn)}</td>
+                                    <td class="tc-cell">${escapeHtml(row.tcOut)}</td>
+                                    <td class="obs-cell">${escapeHtml(row.obs)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `;
+        }
+
+        // Exportar a Word (formato .doc simple)
+        function exportToWord() {
+            const programa = infoPrograma.value || '';
+            const data = infoData.value ? formatDate(infoData.value) : '';
+            const durada = formatTime(elapsedSeconds);
+            const dataEmi = infoDataEmissio.value ? formatDate(infoDataEmissio.value) : '';
+            const contingut = infoContingut.value || '';
+            const episodi = infoEpisodi.value || '';
+            const observacions = infoObservacions.value || '';
+
+            // Crear HTML para Word
+            const htmlContent = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office'
+                      xmlns:w='urn:schemas-microsoft-com:office:word'>
+                <head>
+                    <meta charset="utf-8">
+                    <title>${escapeHtml(programa)}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; color: #000000; }
+                        .header-table { width: 100%; margin-bottom: 20px; border-collapse: collapse; }
+                        .header-table td { padding: 5px 10px; vertical-align: top; color: #000000; }
+                        .header-table .left { width: 60%; }
+                        .header-table .right { width: 40%; text-align: left; }
+                        .label { font-weight: bold; color: #000000; }
+                        .mark { margin: 8px 0; }
+                        .time { color: #000000; font-family: monospace; font-weight: bold; }
+                        .marks-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                        .marks-table th, .marks-table td { border: 1px solid #ccc; padding: 2px 6px; vertical-align: top; line-height: 1.1; color: #000000; }
+                        .marks-table th { background: #4a4a4a; color: #fff; text-align: center; }
+                        .marks-table .tc-cell { text-align: center; }
+                        .marks-table .obs-cell { text-align: left; }
+                        .error-row td { color: #cc0000; font-weight: bold; }
+                        .observacions-section { margin-top: 20px; padding: 10px; border: 1px solid #ccc; }
+                        .observacions-section p { color: #000000; white-space: pre-wrap; }
+                    </style>
+                </head>
+                <body>
+                    <table class="header-table">
+                        <tr>
+                            <td class="left"><span class="label">Programa:</span> ${programa}</td>
+                            <td class="right"><span class="label">DATA:</span> ${data}</td>
+                        </tr>
+                        <tr>
+                            <td class="left"><span class="label">Durada APROX:</span> ${durada}</td>
+                            <td class="right"><span class="label">DATA EMI:</span> ${dataEmi}</td>
+                        </tr>
+                        <tr>
+                            <td class="left"><span class="label">Contenido:</span> ${contingut}</td>
+                            <td class="right"><span class="label">EPISODI:</span> ${episodi}</td>
+                        </tr>
+                    </table>
+                    <hr>
+                    <table class="marks-table">
+                        <thead>
+                            <tr>
+                                <th style="background:#4a4a4a;color:#fff;text-align:center;padding:1px 6px;line-height:1;vertical-align:middle;">T.C. IN</th>
+                                <th style="background:#4a4a4a;color:#fff;text-align:center;padding:1px 6px;line-height:1;vertical-align:middle;">T.C. OUT</th>
+                                <th style="background:#4a4a4a;color:#fff;text-align:center;padding:1px 6px;line-height:1;vertical-align:middle;">Observacions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${buildExportRows().map((row) => `
+                                <tr ${row.type === 'error' ? 'style="color:#cc0000;"' : ''}>
+                                    <td class="tc-cell" style="text-align:center;padding:1px 6px;line-height:1;font-size:11px;${row.type === 'bloc' ? 'font-weight:bold;' : ''}vertical-align:middle;${row.type === 'error' ? 'color:#cc0000;' : ''}">${row.tcIn}</td>
+                                    <td class="tc-cell" style="text-align:center;padding:1px 6px;line-height:1;font-size:11px;${row.type === 'bloc' ? 'font-weight:bold;' : ''}vertical-align:middle;${row.type === 'error' ? 'color:#cc0000;' : ''}">${row.tcOut}</td>
+                                    <td class="obs-cell" style="text-align:left;padding:1px 6px;line-height:1;font-size:11px;${row.type === 'bloc' ? 'font-weight:bold;' : ''}vertical-align:middle;${row.type === 'error' ? 'color:#cc0000;' : ''}">${escapeHtml(row.obs)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    ${observacions ? `
+                    <div class="observacions-section">
+                        <span class="label">Observacions generals:</span>
+                        <p>${escapeHtml(observacions)}</p>
+                    </div>
+                    ` : ''}
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob([htmlContent], { type: 'application/msword' });
+            const episodiClean = episodi.replace(/[^a-zA-Z0-9]/g, '_');
+            const programaClean = programa.replace(/[^a-zA-Z0-9]/g, '_');
+            const filename = episodiClean && programaClean ? `${programaClean}_${episodiClean}.doc` : episodiClean ? `${episodiClean}.doc` : programaClean ? `${programaClean}.doc` : 'marques-temps.doc';
+            downloadFile(blob, filename);
+        }
+
+        // Exportar a PDF (via html2pdf)
+        // Exportar a PDF (via ventana de impresión del navegador)
+        function exportToPdf() {
+            const htmlContent = generateExportHtml();
+            const printWindow = window.open('', '_blank', 'width=800,height=900');
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+            }, 400);
+        }
+
+        // Exportar a formato TXT para Avid
+        function exportToAvid() {
+            const episodi = infoEpisodi.value || '';
+            const programa = infoPrograma.value || '';
+            const programName = programa || episodi || 'FALLO';
+            
+            let content = '';
+            
+            marks.forEach((mark) => {
+                // Exportar TC IN y TC OUT con marcador verde
+                if (mark.type === 'tc') {
+                    const obs = mark.text || 'TC';
+                    
+                    // TC IN
+                    if (mark.timeIn) {
+                        const tcIn = mark.timeIn + ':00'; // Agregar :00 para frames
+                        content += `${programName}\t${tcIn}\tV1\tgreen\t${obs} [IN]\t1\n`;
+                    }
+                    
+                    // TC OUT
+                    if (mark.timeOut) {
+                        const tcOut = mark.timeOut + ':00'; // Agregar :00 para frames
+                        content += `${programName}\t${tcOut}\tV1\tgreen\t${obs} [OUT]\t1\n`;
+                    }
+                }
+                
+                // Exportar ERRORs con color rojo
+                if (mark.type === 'error') {
+                    const color = 'red';
+                    const obs = mark.text || 'ERROR';
+                    const tc = mark.time + ':00'; // Agregar :00 para frames
+                    content += `${programName}\t${tc}\tV1\t${color}\t${obs}\t1\n`;
+                }
+            });
+            
+            if (!content) {
+                alert('No hi ha marques per exportar');
+                return;
+            }
+            
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const episodiClean = episodi.replace(/[^a-zA-Z0-9]/g, '_');
+            const programaClean = programa.replace(/[^a-zA-Z0-9]/g, '_');
+            const filename = episodiClean && programaClean ? `${programaClean}_${episodiClean}_AVID.txt` : episodiClean ? `${episodiClean}_AVID.txt` : programaClean ? `${programaClean}_AVID.txt` : 'marques-temps_AVID.txt';
+            downloadFile(blob, filename);
+}
+
+// Descargar archivo
+function downloadFile(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+        // Elementos adicionales del DOM
+        const btnReset = document.getElementById('btnReset');
+        const btnExportSession = document.getElementById('btnExportSession');
+        const btnImportSession = document.getElementById('btnImportSession');
+        const tcOffsetInput = document.getElementById('tcOffset');
+        const btnTcMinus = document.getElementById('btnTcMinus');
+        const btnTcPlus = document.getElementById('btnTcPlus');
+
+        // Event listeners
+        btnMark.addEventListener('click', addMark);
+        btnBloc.addEventListener('click', addBloc);
+        btnTcIn.addEventListener('click', addTcIn);
+        btnTcOut.addEventListener('click', addTcOut);
+        btnExportWord.addEventListener('click', exportToWord);
+        btnExportPdf.addEventListener('click', exportToPdf);
+        btnExportAvid.addEventListener('click', exportToAvid);
+        btnReset.addEventListener('click', resetAll);
+        btnExportSession.addEventListener('click', exportSession);
+        btnImportSession.addEventListener('click', importSession);
+
+        // Event listeners para TC offset
+        btnTcMinus.addEventListener('click', () => {
+            tcOffset -= 1;
+            tcOffsetInput.value = tcOffset;
+            saveToStorage();
+        });
+
+        btnTcPlus.addEventListener('click', () => {
+            tcOffset += 1;
+            tcOffsetInput.value = tcOffset;
+            saveToStorage();
+        });
+
+        tcOffsetInput.addEventListener('change', () => {
+            const val = parseInt(tcOffsetInput.value) || 0;
+            if (val >= -3600 && val <= 3600) {
+                tcOffset = val;
+                saveToStorage();
+            } else {
+                tcOffsetInput.value = tcOffset;
+            }
+        });
+
+        tcOffsetInput.addEventListener('input', () => {
+            const val = parseInt(tcOffsetInput.value) || 0;
+            if (val >= -3600 && val <= 3600) {
+                tcOffset = val;
+            }
+        });
+
+        // Guardar info al cambiar los campos
+        infoPrograma.addEventListener('change', saveToStorage);
+        infoEpisodi.addEventListener('change', saveToStorage);
+        infoContingut.addEventListener('change', saveToStorage);
+        infoData.addEventListener('change', saveToStorage);
+        infoDataEmissio.addEventListener('change', saveToStorage);
+        infoObservacions.addEventListener('change', saveToStorage);
+
+        // Atajos de teclado
+        document.addEventListener('keydown', (e) => {
+            // Teclas de función: F1, F2, F3, F4 siempre actúan
+            switch(e.code) {
+                case 'F1':
+                    e.preventDefault();
+                    if (!btnTcIn.disabled) {
+                        addTcIn();
+                    }
+                    return;
+                case 'F2':
+                    e.preventDefault();
+                    if (!btnTcOut.disabled) {
+                        addTcOut();
+                    }
+                    return;
+                case 'F3':
+                    e.preventDefault();
+                    if (!btnMark.disabled) {
+                        addMark();
+                    }
+                    return;
+                case 'F4':
+                    e.preventDefault();
+                    if (!btnBloc.disabled) {
+                        addBloc();
+                    }
+                    return;
+            }
+
+            // Escape: salir del input/textarea
+            if (e.code === 'Escape') {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.classList.contains('mark-text')) {
+                    e.preventDefault();
+                    e.target.blur();
+                }
+                return;
+            }
+
+            // Ignorar otras teclas si está escribiendo en un input, textarea o campo de marcas
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.classList.contains('mark-text')) return;
+
+            switch(e.code) {
+                case 'Space':
+                    e.preventDefault();
+                    if (isRunning) {
+                        pauseTimer();
+                    } else if (elapsedSeconds > 0) {
+                        startTimer();
+                    } else {
+                        startTimer();
+                    }
+                    break;
+                case 'Enter':
+                case 'NumpadAdd':
+                    e.preventDefault();
+                    addMark();
+                    break;
+            }
+        });
+
+        // Reiniciar todo
+        function resetAll() {
+            if (confirm('Segur que vols reiniciar?')) {
+                isRunning = false;
+                clearInterval(timerInterval);
+                elapsedSeconds = 0;
+                pausedTime = 0;
+                startEpoch = null;
+                marks = [];
+                tcInTime = null;
+                tcInMarkId = null;
+                tcOffset = 0;
+                tcOffsetInput.value = 0;
+
+                // Limpiar campos de información
+                infoPrograma.value = '';
+                infoEpisodi.value = '';
+                infoContingut.value = '';
+                infoData.value = '';
+                infoDataEmissio.value = '';
+                infoObservacions.value = '';
+                timerDisplay.classList.remove('recording');
+                renderMarks();
+                updateExportButtons();
+                clearStorage();
+
+                btnMark.disabled = false;
+                btnBloc.disabled = false;
+                btnTcIn.disabled = false;
+                btnTcOut.disabled = true;
+                updateTcButtons();
+            }
+        }
+
+        // Exportar sesión a archivo JSON
+        function exportSession() {
+            const sessionData = {
+                elapsedSeconds: elapsedSeconds,
+                marks: marks,
+                isRunning: isRunning,
+                info: {
+                    programa: infoPrograma.value || '',
+                    episodi: infoEpisodi.value || '',
+                    contingut: infoContingut.value || '',
+                    data: infoData.value || '',
+                    dataEmissio: infoDataEmissio.value || ''
+                }
+            };
+
+            const json = JSON.stringify(sessionData, null, 2);
+            const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+            
+            const programa = infoPrograma.value || 'sessio';
+            const episodi = infoEpisodi.value || '';
+            const filename = episodi ? `${episodi}_${programa}_session.json` : `${programa}_session.json`;
+            
+            downloadFile(blob, filename);
+        }
+
+        // Importar sesión desde archivo JSON
+        function importSession() {
+            const fileInput = document.getElementById('sessionFileInput');
+            fileInput.click();
+        }
+
+        // Procesar archivo importado
+        document.getElementById('sessionFileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const sessionData = JSON.parse(event.target.result);
+
+                    // Cargar datos
+                    elapsedSeconds = sessionData.elapsedSeconds || 0;
+                    marks = sessionData.marks || [];
+                    isRunning = false;
+                    
+                    // Cargar información
+                    if (sessionData.info) {
+                        infoPrograma.value = sessionData.info.programa || '';
+                        infoEpisodi.value = sessionData.info.episodi || '';
+                        infoContingut.value = sessionData.info.contingut || '';
+                        infoData.value = sessionData.info.data || '';
+                        infoDataEmissio.value = sessionData.info.dataEmissio || '';
+                    }
+
+                    // Actualizar display
+                    updateDisplay();
+                    renderMarks();
+                    updateExportButtons();
+                    saveToStorage();
+
+                    alert('Sessió importada correctament!');
+                } catch (error) {
+                    alert('Error en importar la sessió: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+
+            // Resetear input para permitir seleccionar el mismo archivo otra vez
+            e.target.value = '';
+        });
+
+        // Inicialización al cargar la página
+        function init() {
+            const wasRunning = loadFromStorage();
+
+            // Cargar el offset en el input
+            tcOffsetInput.value = tcOffset;
+
+            // Si hi ha un TC IN pending, assegurar que esté ben establecido
+            if (!tcInTime) {
+                const pendingTc = marks.find((mark) => mark.type === 'tc' && !mark.timeOut);
+                if (pendingTc) {
+                    tcInTime = pendingTc.timeIn;
+                    tcInMarkId = pendingTc.id;
+                }
+            }
+
+            // Actualizar display del cronómetro
+            updateDisplay();
+            
+            // Iniciar animación del TC con requestAnimationFrame (sincronizado con pantalla, ~60fps)
+            // El TC debe mostrar la hora actual en todo momento con máxima precisión
+            if (!tcInterval) {
+                tcInterval = true; // Marcar como iniciado
+                animateTc(); // Comienza la animación del TC
+            }
+            
+            renderMarks();
+            updateExportButtons();
+
+            // Si había datos guardados y estaba corriendo, reanudar automáticamente
+            if (wasRunning) {
+                startTimer({ autoTcIn: false });
+                updateTcButtons();
+            } else {
+                // Estado inicial: botones habilitados/deshabilitados correctamente
+                btnMark.disabled = false;  // Permitir marcas de error fuera de tiempo
+                btnBloc.disabled = false;  // Permitir separadores fuera de tiempo
+                btnTcIn.disabled = false;
+                btnTcOut.disabled = true;
+                // Asegurar que los botones de exportación estén correctamente habilitados
+                updateTcButtons();
+            }
+        }
+
+        // Confirmar antes de cerrar la web si hay datos activos
+        window.addEventListener('beforeunload', (e) => {
+            // Mostrar confirmación si hay marcas, cronómetro activo o valores en los campos
+            const hasMarks = marks.length > 0;
+            const hasInfo = infoPrograma.value || infoEpisodi.value || infoContingut.value || infoData.value || infoDataEmissio.value;
+            const hasTimer = elapsedSeconds > 0;
+
+            if (hasMarks || hasInfo || hasTimer || isRunning) {
+                // Guardar automáticamente antes de cerrar
+                saveToStorage();
+                
+                // Prevenir cierre y mostrar diálogo del navegador
+                e.preventDefault();
+                // Los navegadores modernos ignoran el mensaje personalizado por seguridad,
+                // pero seguirán mostrando el diálogo si devolvemos algo aquí
+                e.returnValue = '';
+            }
+        });
+
+        // Ejecutar inicialización
+        init();
+
+        // Registrar Service Worker para modo offline
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => {
+                console.log('Service Worker registration failed: ', err);
+            });
+        }
+    </script>
+</body>
+</html>

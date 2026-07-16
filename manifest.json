@@ -1,0 +1,34 @@
+{
+  "name": "Finder And Logger of Lost Occurrences",
+  "short_name": "F.A.L.L.O",
+  "description": "Herramienta profesional para registro y cronometraje de marcas de tiempo en producción audiovisual",
+  "start_url": "F.A.L.L.O.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0f0a12",
+  "background_color": "#1a1520",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230f0a12' width='192' height='192'/><text x='50%' y='50%' font-size='120' fill='%23e0e0e0' text-anchor='middle' dy='.3em' font-family='Arial, sans-serif' font-weight='bold'>F</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%230f0a12' width='512' height='512'/><text x='50%' y='50%' font-size='320' fill='%23e0e0e0' text-anchor='middle' dy='.3em' font-family='Arial, sans-serif' font-weight='bold'>F</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity"],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'><rect fill='%231a1520' width='540' height='720'/><text x='270' y='50' font-size='40' fill='%23e0e0e0' text-anchor='middle' font-family='Arial'>F.A.L.L.O</text></svg>",
+      "sizes": "540x720",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    }
+  ]
+}
