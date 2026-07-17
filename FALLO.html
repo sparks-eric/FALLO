@@ -634,7 +634,51 @@
             color: #606060;
         }
 
+        .lang-switcher {
+            position: fixed;
+            top: 14px;
+            right: 16px;
+            z-index: 500;
+        }
+
+        .lang-switcher select {
+            appearance: none;
+            -webkit-appearance: none;
+            background: #372F38;
+            border: 1px solid #4a4a4a;
+            color: #d4d4d4;
+            padding: 6px 26px 6px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%23d4d4d4'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+        }
+
+        .lang-switcher select:hover {
+            border-color: #7c5c9c;
+        }
+
+        .lang-switcher select:focus {
+            outline: none;
+            border-color: #7c5c9c;
+        }
+
         @media (max-width: 600px) {
+            .lang-switcher {
+                top: 8px;
+                right: 8px;
+            }
+
+            .lang-switcher select {
+                font-size: 0.7rem;
+                padding: 5px 22px 5px 8px;
+            }
+
+
             .info-grid {
                 grid-template-columns: 1fr;
             }
@@ -668,52 +712,60 @@
     </style>
 </head>
 <body>
+    <div class="lang-switcher">
+        <select id="langSelect">
+            <option value="ca">CAT</option>
+            <option value="es">ES</option>
+            <option value="en">ENG</option>
+        </select>
+    </div>
+
     <div class="container">
         <h1>F.A.L.L.O.</h1>
         <div class="subtitle">Finder And Logger of Lost Occurrences</div>
- 
+
         <div class="info-wrapper">
             <div class="info-section">
                 <div class="info-grid">
                     <div class="info-field full-width">
-                        <label for="infoPrograma">Programa / Programa</label>
-                        <input type="text" id="infoPrograma" placeholder="Introdueix el programa...">
+                        <label for="infoPrograma" data-i18n="labelPrograma">Programa</label>
+                        <input type="text" id="infoPrograma" data-i18n-placeholder="placeholderPrograma" placeholder="Introdueix el programa...">
                     </div>
                     <div class="info-field">
-                        <label for="infoEpisodi">Episodi / Episodio</label>
-                        <input type="text" id="infoEpisodi" placeholder="Numero de episodi...">
+                        <label for="infoEpisodi" data-i18n="labelEpisodi">Episodi</label>
+                        <input type="text" id="infoEpisodi" data-i18n-placeholder="placeholderEpisodi" placeholder="Número d'episodi...">
                     </div>
                     <div class="info-field">
-                        <label for="infoContingut">Contenido / Contingut</label>
-                        <input type="text" id="infoContingut" placeholder="Contingut...">
+                        <label for="infoContingut" data-i18n="labelContingut">Contingut</label>
+                        <input type="text" id="infoContingut" data-i18n-placeholder="placeholderContingut" placeholder="Contingut...">
                     </div>
                     <div class="info-field">
-                        <label for="infoData">Data / Fecha</label>
+                        <label for="infoData" data-i18n="labelData">Data</label>
                         <input type="date" id="infoData">
                     </div>
                     <div class="info-field">
-                        <label for="infoDataEmissio">Data d'emissió / Fecha de emisión</label>
+                        <label for="infoDataEmissio" data-i18n="labelDataEmissio">Data d'emissió</label>
                         <input type="date" id="infoDataEmissio">
                     </div>
                     <div class="info-field full-width">
-                        <label for="infoObservacions">Observacions generals / Observaciones generales</label>
-                        <textarea id="infoObservacions" placeholder="Anotacions generals sobre la sessió..." style="background: #424242; border: 1px solid #4a4a4a; border-radius: 3px; padding: 10px 12px; color: #d4d4d4; font-size: 0.9rem; resize: vertical; min-height: 60px; font-family: inherit;"></textarea>
+                        <label for="infoObservacions" data-i18n="labelObservacions">Observacions generals</label>
+                        <textarea id="infoObservacions" data-i18n-placeholder="placeholderObservacions" placeholder="Anotacions generals sobre la sessió..." style="background: #424242; border: 1px solid #4a4a4a; border-radius: 3px; padding: 10px 12px; color: #d4d4d4; font-size: 0.9rem; resize: vertical; min-height: 60px; font-family: inherit;"></textarea>
                     </div>
                 </div>
             </div>
 
             <div class="controls-section">
                 <div class="controls">
-                    <button class="btn btn-reset" id="btnReset">Reinicia</button>
-                    <button class="btn btn-export" id="btnExportSession">Exportar Sessió</button>
-                    <button class="btn btn-export" id="btnImportSession">Importar Sessió</button>
+                    <button class="btn btn-reset" id="btnReset" data-i18n="btnReset">Reinicia</button>
+                    <button class="btn btn-export" id="btnExportSession" data-i18n="btnExportSession">Exportar Sessió</button>
+                    <button class="btn btn-export" id="btnImportSession" data-i18n="btnImportSession">Importar Sessió</button>
                     <input type="file" id="sessionFileInput" style="display: none;" accept=".json">
                 </div>
                 <div class="controls">
-                    <button class="btn btn-tc-in" id="btnTcIn" disabled>T.C. IN(F1)</button>
-                    <button class="btn btn-tc-out" id="btnTcOut" disabled>T.C. OUT (F2)</button>
-                    <button class="btn btn-mark" id="btnMark" disabled>ERROR (F3/ENTER)</button>
-                    <button class="btn btn-bloc" id="btnBloc" disabled>BLOC (F4)</button>
+                    <button class="btn btn-tc-in" id="btnTcIn" data-i18n="btnTcIn" disabled>T.C. IN (F1)</button>
+                    <button class="btn btn-tc-out" id="btnTcOut" data-i18n="btnTcOut" disabled>T.C. OUT (F2)</button>
+                    <button class="btn btn-mark" id="btnMark" data-i18n="btnMark" disabled>ERROR (F3/ENTER)</button>
+                    <button class="btn btn-bloc" id="btnBloc" data-i18n="btnBloc" disabled>BLOC (F4)</button>
                 </div>
             </div>
         </div>
@@ -736,16 +788,16 @@
 
         <div class="marks-section">
             <div class="marks-header">
-                <h2>Marques de temps</h2>
+                <h2 data-i18n="marksHeader">Marques de temps</h2>
                 <div class="export-buttons">
-                    <button class="btn btn-export" id="btnExportWord" disabled>Exportar Word</button>
-                    <button class="btn btn-export" id="btnExportPdf" disabled>Exportar PDF</button>
-                    <button class="btn btn-export" id="btnExportAvid" disabled>Exportar AVID</button>
+                    <button class="btn btn-export" id="btnExportWord" data-i18n="btnExportWord" disabled>Exportar Word</button>
+                    <button class="btn btn-export" id="btnExportPdf" data-i18n="btnExportPdf" disabled>Exportar PDF</button>
+                    <button class="btn btn-export" id="btnExportAvid" data-i18n="btnExportAvid" disabled>Exportar AVID</button>
                 </div>
             </div>
 
             <ul class="marks-list" id="marksList">
-                <li class="empty-message">Inicia el cronometre i prem "+" per afegir marques</li>
+                <li class="empty-message" data-i18n="emptyMessage">Inicia el cronòmetre i fes servir els botons per afegir marques</li>
             </ul>
         </div>
         </div>
@@ -754,6 +806,211 @@
     <script>
         // Claves de localStorage
         const STORAGE_KEY = 'cronometro_data';
+        const LANG_STORAGE_KEY = 'fallo_lang';
+
+        // Diccionario de traducciones
+        const translations = {
+            ca: {
+                labelPrograma: 'Programa',
+                labelEpisodi: 'Episodi',
+                labelContingut: 'Contingut',
+                labelData: 'Data',
+                labelDataEmissio: "Data d'emissió",
+                labelObservacions: 'Observacions generals',
+                placeholderPrograma: 'Introdueix el programa...',
+                placeholderEpisodi: "Número d'episodi...",
+                placeholderContingut: 'Contingut...',
+                placeholderObservacions: 'Anotacions generals sobre la sessió...',
+                btnReset: 'Reinicia',
+                btnExportSession: 'Exportar Sessió',
+                btnImportSession: 'Importar Sessió',
+                btnTcIn: 'T.C. IN (F1)',
+                btnTcOut: 'T.C. OUT (F2)',
+                btnMark: 'ERROR (F3/ENTER)',
+                btnBloc: 'BLOC (F4)',
+                markBloc: 'BLOC',
+                marksHeader: 'Marques de temps',
+                btnExportWord: 'Exportar Word',
+                btnExportPdf: 'Exportar PDF',
+                btnExportAvid: 'Exportar AVID',
+                emptyMessage: 'Inicia el cronòmetre i fes servir els botons per afegir marques',
+                confirmReset: 'Segur que vols reiniciar?',
+                alertEmptyTime: 'No es pot editar un temps buit. Primer completa la marca.',
+                alertInvalidFormat: 'Format de temps invàlid. Format esperat HH:MM:SS',
+                alertReadTimeError: 'Error en llegir el temps. Verifica el format.',
+                modalEditTitle: 'Editar temps',
+                modalHours: 'Hores',
+                modalMinutes: 'Minuts',
+                modalSeconds: 'Segons',
+                modalCancel: 'Cancel·lar',
+                modalSave: 'Guardar',
+                alertInvalidValues: 'Valors invàlids.\nHores: 0-23\nMinuts: 0-59\nSegons: 0-59',
+                alertMinTime: (firstTcIn) => `No pots establir un temps menor que el primer TC IN (${firstTcIn}).\n\nEl primer TC IN és el punt 00:00:00.`,
+                alertNegativeTime: 'El temps no pot ser negatiu.',
+                alertNegativeDuration: (paused) => `⚠️ Aquesta edició resultaria en una durada total negativa.\n\nDurada actual: ${paused}s`,
+                alertSaveError: (msg) => `Error en guardar: ${msg}`,
+                placeholderFragment: 'Descripció del fragment...',
+                placeholderError: "Descripció de l'error...",
+                deleteTitle: 'Elimina',
+                alertNoMarksExport: 'No hi ha marques per exportar',
+                alertSessionImported: 'Sessió importada correctament!',
+                alertImportError: (msg) => `Error en importar la sessió: ${msg}`,
+                exportPrograma: 'Programa:',
+                exportData: 'DATA:',
+                exportDurada: 'Durada APROX:',
+                exportDataEmi: 'DATA EMI:',
+                exportContingut: 'Contingut:',
+                exportEpisodi: 'EPISODI:',
+                exportTcIn: 'T.C. IN',
+                exportTcOut: 'T.C. OUT',
+                exportObservacions: 'Observacions',
+                exportObservacionsGenerals: 'Observacions generals:'
+            },
+            es: {
+                labelPrograma: 'Programa',
+                labelEpisodi: 'Episodio',
+                labelContingut: 'Contenido',
+                labelData: 'Fecha',
+                labelDataEmissio: 'Fecha de emisión',
+                labelObservacions: 'Observaciones generales',
+                placeholderPrograma: 'Introduce el programa...',
+                placeholderEpisodi: 'Número de episodio...',
+                placeholderContingut: 'Contenido...',
+                placeholderObservacions: 'Anotaciones generales sobre la sesión...',
+                btnReset: 'Reiniciar',
+                btnExportSession: 'Exportar Sesión',
+                btnImportSession: 'Importar Sesión',
+                btnTcIn: 'T.C. IN (F1)',
+                btnTcOut: 'T.C. OUT (F2)',
+                btnMark: 'ERROR (F3/ENTER)',
+                btnBloc: 'BLOQUE (F4)',
+                markBloc: 'BLOQUE',
+                marksHeader: 'Marcas de tiempo',
+                btnExportWord: 'Exportar Word',
+                btnExportPdf: 'Exportar PDF',
+                btnExportAvid: 'Exportar AVID',
+                emptyMessage: 'Inicia el cronómetro y usa los botones para añadir marcas',
+                confirmReset: '¿Seguro que quieres reiniciar?',
+                alertEmptyTime: 'No se puede editar un tiempo vacío. Primero completa la marca.',
+                alertInvalidFormat: 'Formato de tiempo inválido. Formato esperado HH:MM:SS',
+                alertReadTimeError: 'Error al leer el tiempo. Verifica el formato.',
+                modalEditTitle: 'Editar tiempo',
+                modalHours: 'Horas',
+                modalMinutes: 'Minutos',
+                modalSeconds: 'Segundos',
+                modalCancel: 'Cancelar',
+                modalSave: 'Guardar',
+                alertInvalidValues: 'Valores inválidos.\nHoras: 0-23\nMinutos: 0-59\nSegundos: 0-59',
+                alertMinTime: (firstTcIn) => `No puedes establecer un tiempo menor que el primer TC IN (${firstTcIn}).\n\nEl primer TC IN es el punto 00:00:00.`,
+                alertNegativeTime: 'El tiempo no puede ser negativo.',
+                alertNegativeDuration: (paused) => `⚠️ Esta edición resultaría en una duración total negativa.\n\nDuración actual: ${paused}s`,
+                alertSaveError: (msg) => `Error al guardar: ${msg}`,
+                placeholderFragment: 'Descripción del fragmento...',
+                placeholderError: 'Descripción del error...',
+                deleteTitle: 'Eliminar',
+                alertNoMarksExport: 'No hay marcas para exportar',
+                alertSessionImported: '¡Sesión importada correctamente!',
+                alertImportError: (msg) => `Error al importar la sesión: ${msg}`,
+                exportPrograma: 'Programa:',
+                exportData: 'FECHA:',
+                exportDurada: 'Duración APROX:',
+                exportDataEmi: 'FECHA EMI:',
+                exportContingut: 'Contenido:',
+                exportEpisodi: 'EPISODIO:',
+                exportTcIn: 'T.C. IN',
+                exportTcOut: 'T.C. OUT',
+                exportObservacions: 'Observaciones',
+                exportObservacionsGenerals: 'Observaciones generales:'
+            },
+            en: {
+                labelPrograma: 'Program',
+                labelEpisodi: 'Episode',
+                labelContingut: 'Content',
+                labelData: 'Date',
+                labelDataEmissio: 'Air date',
+                labelObservacions: 'General remarks',
+                placeholderPrograma: 'Enter the program...',
+                placeholderEpisodi: 'Episode number...',
+                placeholderContingut: 'Content...',
+                placeholderObservacions: 'General notes about the session...',
+                btnReset: 'Reset',
+                btnExportSession: 'Export Session',
+                btnImportSession: 'Import Session',
+                btnTcIn: 'T.C. IN (F1)',
+                btnTcOut: 'T.C. OUT (F2)',
+                btnMark: 'ERROR (F3/ENTER)',
+                btnBloc: 'BLOCK (F4)',
+                markBloc: 'BLOCK',
+                marksHeader: 'Time marks',
+                btnExportWord: 'Export Word',
+                btnExportPdf: 'Export PDF',
+                btnExportAvid: 'Export AVID',
+                emptyMessage: 'Start the timer and use the buttons to add marks',
+                confirmReset: 'Are you sure you want to reset?',
+                alertEmptyTime: 'An empty time cannot be edited. Complete the mark first.',
+                alertInvalidFormat: 'Invalid time format. Expected format HH:MM:SS',
+                alertReadTimeError: 'Error reading the time. Check the format.',
+                modalEditTitle: 'Edit time',
+                modalHours: 'Hours',
+                modalMinutes: 'Minutes',
+                modalSeconds: 'Seconds',
+                modalCancel: 'Cancel',
+                modalSave: 'Save',
+                alertInvalidValues: 'Invalid values.\nHours: 0-23\nMinutes: 0-59\nSeconds: 0-59',
+                alertMinTime: (firstTcIn) => `You cannot set a time earlier than the first TC IN (${firstTcIn}).\n\nThe first TC IN is the 00:00:00 reference point.`,
+                alertNegativeTime: 'The time cannot be negative.',
+                alertNegativeDuration: (paused) => `⚠️ This edit would result in a negative total duration.\n\nCurrent duration: ${paused}s`,
+                alertSaveError: (msg) => `Error saving: ${msg}`,
+                placeholderFragment: 'Fragment description...',
+                placeholderError: 'Error description...',
+                deleteTitle: 'Delete',
+                alertNoMarksExport: 'There are no marks to export',
+                alertSessionImported: 'Session imported successfully!',
+                alertImportError: (msg) => `Error importing the session: ${msg}`,
+                exportPrograma: 'Program:',
+                exportData: 'DATE:',
+                exportDurada: 'Approx. duration:',
+                exportDataEmi: 'AIR DATE:',
+                exportContingut: 'Content:',
+                exportEpisodi: 'EPISODE:',
+                exportTcIn: 'T.C. IN',
+                exportTcOut: 'T.C. OUT',
+                exportObservacions: 'Remarks',
+                exportObservacionsGenerals: 'General remarks:'
+            }
+        };
+
+        let currentLang = localStorage.getItem(LANG_STORAGE_KEY) || 'ca';
+
+        // Obtener texto traducido (acepta argumentos para entradas tipo función)
+        function t(key, ...args) {
+            const entry = (translations[currentLang] || translations.ca)[key];
+            return typeof entry === 'function' ? entry(...args) : entry;
+        }
+
+        // Aplicar traducciones a los elementos marcados con data-i18n
+        function applyTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach((el) => {
+                el.textContent = t(el.dataset.i18n);
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+                el.placeholder = t(el.dataset.i18nPlaceholder);
+            });
+            document.documentElement.lang = currentLang;
+            if (typeof renderMarks === 'function') {
+                renderMarks();
+            }
+        }
+
+        // Cambiar idioma y persistir la elección
+        function setLanguage(lang) {
+            if (!translations[lang]) return;
+            currentLang = lang;
+            localStorage.setItem(LANG_STORAGE_KEY, lang);
+            const langSelect = document.getElementById('langSelect');
+            if (langSelect) langSelect.value = lang;
+            applyTranslations();
+        }
 
         // Variables del cronómetro
         let timerInterval = null;
@@ -1242,7 +1499,7 @@
 
             // Si el tiempo es '--:--:--', no permitir editar
             if (currentTime === '--:--:--') {
-                alert('No se puede editar un tiempo vacío. Primero completa la marca.');
+                alert(t('alertEmptyTime'));
                 return;
             }
 
@@ -1250,7 +1507,7 @@
             const parts = currentTime.split(':');
             if (parts.length !== 3) {
                 console.error('Formato de tiempo inválido:', currentTime);
-                alert('Formato de tiempo inválido. Esperado HH:MM:SS');
+                alert(t('alertInvalidFormat'));
                 return;
             }
 
@@ -1261,7 +1518,7 @@
             // Validar que los valores parseados sean válidos
             if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
                 console.error('Valores de tiempo no numéricos:', parts);
-                alert('Error al leer el tiempo. Verifica el formato.');
+                alert(t('alertReadTimeError'));
                 return;
             }
 
@@ -1284,7 +1541,7 @@
 
             const title = document.createElement('div');
             title.style.cssText = 'margin-bottom: 15px; font-weight: bold; color: #e0e0e0;';
-            title.textContent = `Editar tiempo`;
+            title.textContent = t('modalEditTitle');
             container.appendChild(title);
 
             // Crear inputs para cada componente
@@ -1360,9 +1617,9 @@
                 return { wrapper, input };
             };
 
-            const hoursEl = createInput(hours, '23', 'Horas');
-            const minutesEl = createInput(minutes, '59', 'Minutos');
-            const secondsEl = createInput(seconds, '59', 'Segundos');
+            const hoursEl = createInput(hours, '23', t('modalHours'));
+            const minutesEl = createInput(minutes, '59', t('modalMinutes'));
+            const secondsEl = createInput(seconds, '59', t('modalSeconds'));
 
             editorDiv.appendChild(hoursEl.wrapper);
             const colon1 = document.createElement('span');
@@ -1384,7 +1641,7 @@
             buttonsDiv.style.cssText = 'display: flex; gap: 10px; justify-content: flex-end;';
 
             const btnCancel = document.createElement('button');
-            btnCancel.textContent = 'Cancelar';
+            btnCancel.textContent = t('modalCancel');
             btnCancel.style.cssText = `
                 padding: 8px 16px;
                 background: #424242;
@@ -1416,7 +1673,7 @@
             overlay.onclick = closeModal;
 
             const btnSave = document.createElement('button');
-            btnSave.textContent = 'Guardar';
+            btnSave.textContent = t('modalSave');
             btnSave.style.cssText = `
                 padding: 8px 16px;
                 background: #7c5c9c;
@@ -1439,7 +1696,7 @@
 
                     // Validar rangos (no debería fallarse debido a min/max en HTML, pero por seguridad)
                     if (newHours > 23 || newMinutes > 59 || newSeconds > 59) {
-                        alert('Valores inválidos.\nHoras: 0-23\nMinutos: 0-59\nSegundos: 0-59');
+                        alert(t('alertInvalidValues'));
                         return;
                     }
 
@@ -1453,9 +1710,9 @@
                     if (newTotalSecs < minimumAllowed) {
                         const firstTcIn = getFirstTcIn();
                         if (firstTcIn) {
-                            alert(`No puedes establecer un tiempo menor que el primer TC IN (${firstTcIn}).\n\nEl primer TC IN es el punto 00:00:00.`);
+                            alert(t('alertMinTime', firstTcIn));
                         } else {
-                            alert('El tiempo no puede ser negativo.');
+                            alert(t('alertNegativeTime'));
                         }
                         return;
                     }
@@ -1560,7 +1817,7 @@
                         const newPausedTime = pausedTime + tcDurationDiff;
                         
                         if (newPausedTime < 0) {
-                            alert(`⚠️ Esta edición resultaría en una duración total negativa.\n\nDuración actual: ${pausedTime}s`);
+                            alert(t('alertNegativeDuration', pausedTime));
                             return;
                         }
                         
@@ -1584,7 +1841,7 @@
                     console.log('✅ Tiempo actualizado correctamente');
                 } catch (error) {
                     console.error('Error al guardar el tiempo:', error);
-                    alert('Error al guardar: ' + error.message);
+                    alert(t('alertSaveError', error.message));
                 }
             };
 
@@ -1674,7 +1931,7 @@
                 saveToStorage();
             }
             if (marks.length === 0) {
-                marksList.innerHTML = '<li class="empty-message">Inicia el cronometre i fes servir els botons per afegir marques</li>';
+                marksList.innerHTML = `<li class="empty-message">${t('emptyMessage')}</li>`;
                 return;
             }
 
@@ -1686,8 +1943,8 @@
                     return `
                         <li class="mark-item mark-bloc" data-id="${mark.id}">
                             <span class="mark-number">${index + 1}</span>
-                            <span class="mark-type type-bloc">BLOC ${blocCount}</span>
-                            <button class="mark-delete" onclick="deleteMark(${mark.id})" title="Elimina">X</button>
+                            <span class="mark-type type-bloc">${t('markBloc')} ${blocCount}</span>
+                            <button class="mark-delete" onclick="deleteMark(${mark.id})" title="${t('deleteTitle')}">X</button>
                         </li>
                     `;
                 } else if (mark.type === 'tc') {
@@ -1702,13 +1959,13 @@
                             <input
                                 type="text"
                                 class="mark-text"
-                                placeholder="Descripcio del fragment..."
+                                placeholder="${t('placeholderFragment')}"
                                 value="${escapeHtml(mark.text)}"
                                 onchange="updateMarkText(${mark.id}, this.value)"
                                 oninput="updateMarkText(${mark.id}, this.value)"
                                 data-mark-id="${mark.id}"
                             >
-                            <button class="mark-delete" onclick="deleteMark(${mark.id})" title="Elimina">X</button>
+                            <button class="mark-delete" onclick="deleteMark(${mark.id})" title="${t('deleteTitle')}">X</button>
                         </li>
                     `;
                 } else {
@@ -1721,13 +1978,13 @@
                             <input
                                 type="text"
                                 class="mark-text"
-                                placeholder="Descripcio de l'error..."
+                                placeholder="${t('placeholderError')}"
                                 value="${escapeHtml(mark.text)}"
                                 onchange="updateMarkText(${mark.id}, this.value)"
                                 oninput="updateMarkText(${mark.id}, this.value)"
                                 data-mark-id="${mark.id}"
                             >
-                            <button class="mark-delete" onclick="deleteMark(${mark.id})" title="Elimina">X</button>
+                            <button class="mark-delete" onclick="deleteMark(${mark.id})" title="${t('deleteTitle')}">X</button>
                         </li>
                     `;
                 }
@@ -1774,7 +2031,7 @@
             return marks.map((mark) => {
                 if (mark.type === 'bloc') {
                     blocCount++;
-                    return { tcIn: '', obs: `BLOC ${blocCount}`, tcOut: '', type: 'bloc' };
+                    return { tcIn: '', obs: `${t('markBloc')} ${blocCount}`, tcOut: '', type: 'bloc' };
                 }
                 if (mark.type === 'tc') {
                     const timeOutDisplay = mark.timeOut || '--:--:--';
@@ -1859,31 +2116,31 @@
                 <body>
                     <table class="header-table">
                         <tr>
-                            <td class="left"><span class="label">Programa:</span> ${escapeHtml(programa)}</td>
-                            <td class="right"><span class="label">DATA:</span> ${escapeHtml(data)}</td>
+                            <td class="left"><span class="label">${t('exportPrograma')}</span> ${escapeHtml(programa)}</td>
+                            <td class="right"><span class="label">${t('exportData')}</span> ${escapeHtml(data)}</td>
                         </tr>
                         <tr>
-                            <td class="left"><span class="label">Durada APROX:</span> ${escapeHtml(durada)}</td>
-                            <td class="right"><span class="label">DATA EMI:</span> ${escapeHtml(dataEmi)}</td>
+                            <td class="left"><span class="label">${t('exportDurada')}</span> ${escapeHtml(durada)}</td>
+                            <td class="right"><span class="label">${t('exportDataEmi')}</span> ${escapeHtml(dataEmi)}</td>
                         </tr>
                         <tr>
-                            <td class="left"><span class="label">Contenido:</span> ${escapeHtml(contingut)}</td>
-                            <td class="right"><span class="label">EPISODI:</span> ${escapeHtml(episodi)}</td>
+                            <td class="left"><span class="label">${t('exportContingut')}</span> ${escapeHtml(contingut)}</td>
+                            <td class="right"><span class="label">${t('exportEpisodi')}</span> ${escapeHtml(episodi)}</td>
                         </tr>
                     </table>
                     <hr>
                     ${observacions ? `
                     <div class="observacions-section">
-                        <span class="label">Observacions generals:</span>
+                        <span class="label">${t('exportObservacionsGenerals')}</span>
                         <p>${escapeHtml(observacions)}</p>
                     </div>
                     ` : ''}
                     <table class="marks-table">
                         <thead>
                             <tr>
-                                <th>T.C. IN</th>
-                                <th>T.C. OUT</th>
-                                <th>Observacions</th>
+                                <th>${t('exportTcIn')}</th>
+                                <th>${t('exportTcOut')}</th>
+                                <th>${t('exportObservacions')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1940,25 +2197,25 @@
                 <body>
                     <table class="header-table">
                         <tr>
-                            <td class="left"><span class="label">Programa:</span> ${programa}</td>
-                            <td class="right"><span class="label">DATA:</span> ${data}</td>
+                            <td class="left"><span class="label">${t('exportPrograma')}</span> ${programa}</td>
+                            <td class="right"><span class="label">${t('exportData')}</span> ${data}</td>
                         </tr>
                         <tr>
-                            <td class="left"><span class="label">Durada APROX:</span> ${durada}</td>
-                            <td class="right"><span class="label">DATA EMI:</span> ${dataEmi}</td>
+                            <td class="left"><span class="label">${t('exportDurada')}</span> ${durada}</td>
+                            <td class="right"><span class="label">${t('exportDataEmi')}</span> ${dataEmi}</td>
                         </tr>
                         <tr>
-                            <td class="left"><span class="label">Contenido:</span> ${contingut}</td>
-                            <td class="right"><span class="label">EPISODI:</span> ${episodi}</td>
+                            <td class="left"><span class="label">${t('exportContingut')}</span> ${contingut}</td>
+                            <td class="right"><span class="label">${t('exportEpisodi')}</span> ${episodi}</td>
                         </tr>
                     </table>
                     <hr>
                     <table class="marks-table">
                         <thead>
                             <tr>
-                                <th style="background:#4a4a4a;color:#fff;text-align:center;padding:1px 6px;line-height:1;vertical-align:middle;">T.C. IN</th>
-                                <th style="background:#4a4a4a;color:#fff;text-align:center;padding:1px 6px;line-height:1;vertical-align:middle;">T.C. OUT</th>
-                                <th style="background:#4a4a4a;color:#fff;text-align:center;padding:1px 6px;line-height:1;vertical-align:middle;">Observacions</th>
+                                <th style="background:#4a4a4a;color:#fff;text-align:center;padding:1px 6px;line-height:1;vertical-align:middle;">${t('exportTcIn')}</th>
+                                <th style="background:#4a4a4a;color:#fff;text-align:center;padding:1px 6px;line-height:1;vertical-align:middle;">${t('exportTcOut')}</th>
+                                <th style="background:#4a4a4a;color:#fff;text-align:center;padding:1px 6px;line-height:1;vertical-align:middle;">${t('exportObservacions')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1973,7 +2230,7 @@
                     </table>
                     ${observacions ? `
                     <div class="observacions-section">
-                        <span class="label">Observacions generals:</span>
+                        <span class="label">${t('exportObservacionsGenerals')}</span>
                         <p>${escapeHtml(observacions)}</p>
                     </div>
                     ` : ''}
@@ -2037,7 +2294,7 @@
             });
             
             if (!content) {
-                alert('No hi ha marques per exportar');
+                alert(t('alertNoMarksExport'));
                 return;
             }
             
@@ -2059,6 +2316,10 @@ function downloadFile(blob, filename) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+
+        // Selector de idioma
+        const langSelect = document.getElementById('langSelect');
+        langSelect.addEventListener('change', (e) => setLanguage(e.target.value));
 
         // Elementos adicionales del DOM
         const btnReset = document.getElementById('btnReset');
@@ -2181,7 +2442,7 @@ function downloadFile(blob, filename) {
 
         // Reiniciar todo
         function resetAll() {
-            if (confirm('Segur que vols reiniciar?')) {
+            if (confirm(t('confirmReset'))) {
                 isRunning = false;
                 clearInterval(timerInterval);
                 elapsedSeconds = 0;
@@ -2192,6 +2453,7 @@ function downloadFile(blob, filename) {
                 tcInMarkId = null;
                 tcOffset = 0;
                 tcOffsetInput.value = 0;
+                updateDisplay();
 
                 // Limpiar campos de información
                 infoPrograma.value = '';
@@ -2274,9 +2536,9 @@ function downloadFile(blob, filename) {
                     updateExportButtons();
                     saveToStorage();
 
-                    alert('Sessió importada correctament!');
+                    alert(t('alertSessionImported'));
                 } catch (error) {
-                    alert('Error en importar la sessió: ' + error.message);
+                    alert(t('alertImportError', error.message));
                 }
             };
             reader.readAsText(file);
@@ -2287,6 +2549,9 @@ function downloadFile(blob, filename) {
 
         // Inicialización al cargar la página
         function init() {
+            langSelect.value = currentLang;
+            applyTranslations();
+
             const wasRunning = loadFromStorage();
 
             // Cargar el offset en el input
